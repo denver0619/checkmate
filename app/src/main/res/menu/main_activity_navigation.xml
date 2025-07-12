@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_item_todo"
+        android:enabled="true"
+        android:icon="@drawable/ic_nav_todo"
+        android:title="@string/nav_to_do"/>
+    <item
+        android:id="@+id/nav_item_scheduled"
+        android:enabled="true"
+        android:icon="@drawable/ic_nav_scheduled"
+        android:title="@string/nav_scheduled"/>
+    <item
+        android:id="@+id/nav_item_repeating"
+        android:enabled="true"
+        android:icon="@drawable/ic_nav_repeating"
+        android:title="@string/nav_repeating"/>
+<!--    <item-->
+<!--        android:id="@+id/nav_item_history"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/ic_nav_history"-->
+<!--        android:title="@string/nav_history"/>-->
+</menu>
