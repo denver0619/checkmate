@@ -4,8 +4,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 
-public class RepeatingTask implements TaskModel {
+public class RepeatingTask extends TaskModel {
     private int _id;
     private String _content;
     private Boolean _status;
@@ -129,5 +130,25 @@ public class RepeatingTask implements TaskModel {
     @Override
     public String content() {
         return  this._content;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RepeatingTask)) return false;
+
+        RepeatingTask otherRepeatingTask = (RepeatingTask) o;
+        return this._id == otherRepeatingTask._id
+                && Objects.equals(this._content, otherRepeatingTask._content)
+                && this._status == otherRepeatingTask._status
+                && this._startDate == otherRepeatingTask._startDate
+                && this._interval == otherRepeatingTask._interval
+                && this._lastCompleted == otherRepeatingTask._lastCompleted
+                && this._currentCompleted == otherRepeatingTask._currentCompleted;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_id, _content, _status, _startDate, _interval, _lastCompleted, _currentCompleted);
     }
 }

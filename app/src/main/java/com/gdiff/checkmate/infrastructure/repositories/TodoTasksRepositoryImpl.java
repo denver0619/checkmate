@@ -9,18 +9,20 @@ import android.database.sqlite.SQLiteException;
 import android.widget.Toast;
 
 import com.gdiff.checkmate.domain.models.TodoTask;
+import com.gdiff.checkmate.domain.repositories.GeneralRepositoryCallback;
+import com.gdiff.checkmate.domain.repositories.RepositoryListFetchCallback;
+import com.gdiff.checkmate.domain.repositories.RepositorySingleFetchCallback;
 import com.gdiff.checkmate.domain.repositories.TodoTasksRepository;
 import com.gdiff.checkmate.infrastructure.database.TaskDbHelper;
 import com.gdiff.checkmate.infrastructure.database.tables.TodoTasksTable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     private final SQLiteDatabase _database;
     private final Context _context;
-    private final List<RepositoryCallback> callbacks = Collections.synchronizedList(new ArrayList<>());
+    private GeneralRepositoryCallback callback;
     private static volatile TodoTasksRepositoryImpl _instance;
 
     private TodoTasksRepositoryImpl(Application applicationContext) {
@@ -40,27 +42,15 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     }
 
     @Override
-    public void registerCallback(RepositoryCallback callback) {
-        if (!this.callbacks.contains(callback)) {
-            this.callbacks.add(callback);
+    public void registerCallback(GeneralRepositoryCallback callback) {
+        if (this.callback==null) {
+            this.callback = callback;
         }
     }
 
     @Override
-    public void unregisterCallback(RepositoryCallback callback) {
-        this.callbacks.remove(callback);
-    }
-
-    @Override
-    public void unregisterAllCallback() {
-        this.callbacks.clear();
-    }
-
-    @Override
-    public void notifyCallbacks() {
-        for (RepositoryCallback callback: callbacks) {
-            callback.onCallback();
-        }
+    public void unregisterCallback() {
+        this.callback = null;
     }
 
     @Override
@@ -89,6 +79,36 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                 cursor.close();
             }
         }
+        return result;
+    }
+
+    @Override
+    public List<TodoTask> getAll(RepositoryListFetchCallback fetchCallback) {
+        String query = "SELECT * FROM " + TodoTasksTable.tableName + ";";
+        Cursor cursor = null;
+        List<TodoTask> result = new ArrayList<>();
+        if (this._database != null) {
+            cursor = this._database.rawQuery(query, null);
+        }
+
+        if (cursor != null) {
+            try {
+                for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                    result.add(
+                            new TodoTask(
+                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id)),
+                                    cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content)),
+                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0 //hack from int to boolean
+                            )
+                    );
+                }
+            } catch (SQLiteException err) {
+
+            } finally {
+                cursor.close();
+            }
+        }
+        fetchCallback.onFetch(result);
         return result;
     }
 
@@ -123,6 +143,37 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     }
 
     @Override
+    public TodoTask getById(int id, RepositorySingleFetchCallback fetchCallback) {
+        String query = "SELECT * FROM " + TodoTasksTable.tableName + " WHERE id = " + String.valueOf(id) + " ;";
+        Cursor cursor = null;
+        List<TodoTask> result = new ArrayList<>();
+
+        if (this._database != null) {
+            cursor = this._database.rawQuery(query, null);
+        }
+
+        if (cursor != null ) {
+            try {
+                for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                    result.add(
+                            new TodoTask(
+                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id)),
+                                    cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content)),
+                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0 //hack from int to boolean
+                            )
+                    );
+                }
+            } catch (SQLiteException err) {
+
+            } finally {
+                cursor.close();
+            }
+        }
+        fetchCallback.onFetch((result.isEmpty())?null:result.get(0));
+        return (result.isEmpty())?null:result.get(0);
+    }
+
+    @Override
     public void add(TodoTask todoTask) {
         ContentValues values = new ContentValues();
         values.put(TodoTasksTable.content, todoTask.getContent());
@@ -133,7 +184,9 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
         } else {
             Toast.makeText(this._context, "Success", Toast.LENGTH_SHORT).show();
         }
-        notifyCallbacks();
+        if(this.callback != null) {
+            this.callback.onAdd();
+        }
     }
 
     @Override
@@ -151,7 +204,9 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
         } else {
             Toast.makeText(this._context, "Successfully updated values.", Toast.LENGTH_SHORT).show();
         }
-        notifyCallbacks();
+        if(this.callback != null) {
+            this.callback.onUpdate(todoTask.getId());
+        }
     }
 
     @Override
@@ -159,6 +214,8 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
         this._database.delete(TodoTasksTable.tableName,
                 TodoTasksTable.id + " =?",
                 new String[]{String.valueOf(todoTask.getId())});
-        notifyCallbacks();
+        if(this.callback != null) {
+            this.callback.onDelete(todoTask.getId());
+        }
     }
 }

@@ -1,24 +1,17 @@
 package com.gdiff.checkmate;
 
-import android.app.Application;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.gdiff.checkmate.databinding.ActivityMainBinding;
 import com.gdiff.checkmate.presentation.activities.BaseActivity;
-import com.google.android.material.color.DynamicColors;
-import com.google.android.material.color.utilities.DynamicColor;
 import com.google.android.material.navigation.NavigationBarView;
 
 public class MainActivity extends BaseActivity {
@@ -42,6 +35,7 @@ public class MainActivity extends BaseActivity {
     public void onStart() {
         super.onStart();
         MainActivityViewPagerAdapter mainActivityViewPagerAdapter = new MainActivityViewPagerAdapter(this);
+        activityMainBinding.mainViewPager.setUserInputEnabled(false); // Disables swiping
         activityMainBinding.mainViewPager.setAdapter(mainActivityViewPagerAdapter);
         activityMainBinding.mainViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override

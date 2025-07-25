@@ -4,8 +4,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 
-public class ScheduledTask implements TaskModel{
+public class ScheduledTask extends TaskModel{
     private int _id;
     private String _content;
     private Boolean _status;
@@ -77,5 +78,22 @@ public class ScheduledTask implements TaskModel{
     @Override
     public String content() {
         return  this._content;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScheduledTask)) return false;
+
+        ScheduledTask otherScheduledTask = (ScheduledTask) o;
+        return this._id == otherScheduledTask._id
+                && Objects.equals(this._content, otherScheduledTask._content)
+                && this._status == otherScheduledTask._status
+                && this._dueDate == otherScheduledTask._dueDate;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_id, _content, _status, _dueDate);
     }
 }
