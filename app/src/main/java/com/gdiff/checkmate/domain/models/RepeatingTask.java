@@ -128,6 +128,12 @@ public class RepeatingTask extends TaskModel {
     }
 
     @Override
+    public Boolean isExpired() {
+        //Todo: date checks
+        return null;
+    }
+
+    @Override
     public String content() {
         return  this._content;
     }

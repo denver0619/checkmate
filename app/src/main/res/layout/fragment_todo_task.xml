@@ -9,55 +9,13 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <ScrollView
-            android:id="@+id/scroll_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <com.google.android.material.textview.MaterialTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="To Do"
-                        android:textSize="?attr/textAppearanceHeadline1"/>
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/unfinished_recycler_view"
-                        android:paddingHorizontal="10dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:paddingBottom="100dp"
-                        android:clipToPadding="false"/>
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/text_when_no_todo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="There are no task to do."/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <com.google.android.material.textview.MaterialTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="To Do"
-                        android:textSize="?attr/textAppearanceHeadline1"/>
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/finished_recycler_view"
-                        android:paddingHorizontal="10dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:paddingBottom="100dp"
-                        android:clipToPadding="false"/>
-                </LinearLayout>
-            </LinearLayout>
-        </ScrollView>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_tasks"
+            android:paddingHorizontal="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="100dp"
+            android:clipToPadding="false"/>
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/text_when_empty"
             android:layout_width="match_parent"

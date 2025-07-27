@@ -1,17 +1,20 @@
 package com.gdiff.checkmate.presentation.fragments.main;
 
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.gdiff.checkmate.databinding.ItemGroupHeaderBinding;
 import com.gdiff.checkmate.databinding.ItemTaskListBinding;
 import com.gdiff.checkmate.domain.models.TaskModel;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,16 +32,16 @@ public class TasksAdapter extends RecyclerView.Adapter {
     private List<? extends TaskModel> _expiredModelList;
 
     private final class HeaderTitles {
-        private static final String UNFINISHED_TITLE = "";
-        private static final String FINISHED_TITLE = "";
-        private static final String EXPIRED_TITLE = "";
+        private static final String UNFINISHED_TITLE = "Unfinished Tasks";
+        private static final String FINISHED_TITLE = "Finished Tasks";
+        private static final String EXPIRED_TITLE = "Expired Tasks";
     }
 
     public TasksAdapter(OnTaskItemClickListener onTaskItemClickListener) {
-        this._viewList = Collections.emptyList();
-        this._unfinishedModelList = Collections.emptyList();
-        this._finishedModelList = Collections.emptyList();
-        this._expiredModelList = Collections.emptyList();
+        this._viewList = new ArrayList<>();
+        this._unfinishedModelList = new ArrayList<>();
+        this._finishedModelList = new ArrayList<>();
+        this._expiredModelList = new ArrayList<>();
         this._onTaskItemClickListener = onTaskItemClickListener;
     }
 
@@ -164,6 +167,7 @@ public class TasksAdapter extends RecyclerView.Adapter {
         || viewType == TasksAdapterViewType.TASK_HEADER_EXPIRED) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
             ItemGroupHeaderBinding itemGroupHeaderBinding = ItemGroupHeaderBinding.inflate(inflater, parent, false);
+            Log.d("======================", "a header is created");
             return new HeaderViewHolder(itemGroupHeaderBinding.getRoot(), itemGroupHeaderBinding);
         }
         else  {
@@ -182,6 +186,7 @@ public class TasksAdapter extends RecyclerView.Adapter {
                     HeaderViewHolder unfinishedHeaderHolder = ((HeaderViewHolder) holder);
                     unfinishedHeaderHolder.getBinding().buttonDeleteAll.setVisibility(View.GONE);
                     unfinishedHeaderHolder.bind(this._unfinishedModelList, currentViewType.getHeaderTitle());
+                    Log.d("========================", "unfinishedHeaderBound");
                     break;
                 case TasksAdapterViewType.TASK_HEADER_FINISHED:
                     HeaderViewHolder finishedHeaderHolder = ((HeaderViewHolder) holder);
@@ -270,48 +275,65 @@ public class TasksAdapter extends RecyclerView.Adapter {
         this._unfinishedModelList = unfinishedModels;
         this._finishedModelList = finishedModels;
         this._expiredModelList = expiredModels;
+        List<TasksAdapterViewType> newViewList = new ArrayList<>();
+
         if (!unfinishedModels.isEmpty()||!finishedModels.isEmpty()||!expiredModels.isEmpty()) {
             TasksAdapterViewType unfinishedHeader = new TasksAdapterViewType(TasksAdapterViewType.TASK_HEADER_UNFINISHED);
             unfinishedHeader.setHeaderTitle(HeaderTitles.UNFINISHED_TITLE);
-            this._viewList.add(unfinishedHeader);
+            newViewList.add(unfinishedHeader);
         }
         if (!_unfinishedModelList.isEmpty()) {
             for (TaskModel unfinishedModel : unfinishedModels) {
                 TasksAdapterViewType unfinishedItem = new TasksAdapterViewType(TasksAdapterViewType.TASK_ITEM_UNFINISHED);
                 unfinishedItem.setTaskModel(unfinishedModel);
-                this._viewList.add(unfinishedItem);
+                newViewList.add(unfinishedItem);
             }
         }
         if (!finishedModels.isEmpty()) {
             TasksAdapterViewType finishedHeader = new TasksAdapterViewType(TasksAdapterViewType.TASK_HEADER_FINISHED);
             finishedHeader.setHeaderTitle(HeaderTitles.FINISHED_TITLE);
-            this._viewList.add(finishedHeader);
+            newViewList.add(finishedHeader);
 
             for (TaskModel finishedModel : finishedModels) {
                 TasksAdapterViewType finishedItem = new TasksAdapterViewType(TasksAdapterViewType.TASK_ITEM_FINISHED);
                 finishedItem.setTaskModel(finishedModel);
-                this._viewList.add(finishedItem);
+                newViewList.add(finishedItem);
             }
         }
         if(!expiredModels.isEmpty()) {
             TasksAdapterViewType expiredHeader = new TasksAdapterViewType(TasksAdapterViewType.TASK_HEADER_EXPIRED);
             expiredHeader.setHeaderTitle(HeaderTitles.EXPIRED_TITLE);
-            this._viewList.add(expiredHeader);
+            newViewList.add(expiredHeader);
 
             for (TaskModel expiredModel : expiredModels) {
                 TasksAdapterViewType expiredItem = new TasksAdapterViewType(TasksAdapterViewType.TASK_ITEM_EXPIRED);
                 expiredItem.setTaskModel(expiredModel);
-                this._viewList.add(expiredItem);
+                newViewList.add(expiredItem);
             }
         }
+
+        //Dispatches an update animation when data is changed
+        TasksDiffUtilCallback diffUtilCallback = new TasksDiffUtilCallback(this._viewList, newViewList);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffUtilCallback);
+        this._viewList.clear();
+        this._viewList.addAll(newViewList);
+        for(TasksAdapterViewType adapterViewType: newViewList) {
+            Log.d("=========================", String.valueOf(adapterViewType.getType()));
+        }
+        diffResult.dispatchUpdatesTo(this);
     }
 
     public List<? extends TaskModel> getModels() {
-        return Stream.of(this._unfinishedModelList, Stream.of(this._finishedModelList,this._expiredModelList)
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toList()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+        List<TaskModel> result = new ArrayList<>();
+        result.addAll(this._unfinishedModelList);
+        result.addAll(this._finishedModelList);
+        result.addAll(this._expiredModelList);
+        return result;
+//                Stream.of(this._unfinishedModelList, Stream.of(this._finishedModelList,this._expiredModelList)
+//                        .flatMap(Collection::stream)
+//                        .collect(Collectors.toList()))
+//                .flatMap(Collection::stream)
+//                .collect(Collectors.toList());
     }
 
     public List<TasksAdapterViewType> getViewTypeList() {

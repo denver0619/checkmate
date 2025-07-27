@@ -46,6 +46,11 @@ public class TodoTask extends TaskModel {
     }
 
     @Override
+    public Boolean isExpired() {
+        return false;
+    }
+
+    @Override
     public String content() {
         return  this._content;
     }

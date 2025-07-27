@@ -5,6 +5,7 @@ import java.io.Serializable;
 public abstract class TaskModel implements Serializable {
     public abstract int getId();
     public abstract Boolean isDone();
+    public abstract Boolean isExpired();
     public abstract String content();
 
 

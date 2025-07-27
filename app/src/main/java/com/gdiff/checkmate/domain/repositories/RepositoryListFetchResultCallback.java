@@ -4,6 +4,6 @@ import com.gdiff.checkmate.domain.models.TaskModel;
 
 import java.util.List;
 
-public interface RepositoryListFetchCallback {
+public interface RepositoryListFetchResultCallback {
     void onFetch(List<? extends TaskModel> modelList);
 }
