@@ -24,13 +24,14 @@ import java.util.concurrent.Executors;
 public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     private final SQLiteDatabase _database;
     private final Context _context;
-    private RepositoryOnDataChangedCallback callback;
+    private static List<RepositoryOnDataChangedCallback> _callbacks;
     private static volatile TodoTasksRepositoryImpl _instance;
     private final ExecutorService _executorService;
 
     private TodoTasksRepositoryImpl(Application applicationContext) {
         this._context = applicationContext;
         this._database = TaskDbHelper.getInstance(applicationContext).getWritableDatabase();
+        _callbacks = new ArrayList<>();
         this._executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -47,14 +48,12 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
 
     @Override
     public void registerCallback(RepositoryOnDataChangedCallback callback) {
-        if (this.callback==null) {
-            this.callback = callback;
-        }
+        _callbacks.add(callback);
     }
 
     @Override
-    public void unregisterCallback() {
-        this.callback = null;
+    public void unregisterCallback(RepositoryOnDataChangedCallback callback) {
+        _callbacks.remove(callback);
     }
 
 
@@ -202,8 +201,10 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                         if (result == -1) {
                             Toast.makeText(TodoTasksRepositoryImpl.this._context, "Failed", Toast.LENGTH_SHORT).show();
                         } else {
-                            if(TodoTasksRepositoryImpl.this.callback != null) {
-                                TodoTasksRepositoryImpl.this.callback.onDataChanged();
+                            if(!_callbacks.isEmpty()) {
+                                for (RepositoryOnDataChangedCallback callback : TodoTasksRepositoryImpl._callbacks) {
+                                    callback.onDataChanged();
+                                }
                             }
                             Toast.makeText(TodoTasksRepositoryImpl.this._context, "Success", Toast.LENGTH_SHORT).show();
                         }
@@ -213,7 +214,7 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     }
 
     @Override
-    public void edit(TodoTask todoTask) {
+    public void update(TodoTask todoTask) {
         this._executorService.submit(
                 new Runnable() {
                     @Override
@@ -229,8 +230,10 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                         if (result == -1) {
                             Toast.makeText(TodoTasksRepositoryImpl.this._context, "Failed to update values.", Toast.LENGTH_SHORT).show();
                         } else {
-                            if(TodoTasksRepositoryImpl.this.callback != null) {
-                                TodoTasksRepositoryImpl.this.callback.onDataChanged();
+                            if(!_callbacks.isEmpty()) {
+                                for (RepositoryOnDataChangedCallback callback : TodoTasksRepositoryImpl._callbacks) {
+                                    callback.onDataChanged();
+                                }
                             }
                             Toast.makeText(TodoTasksRepositoryImpl.this._context, "Successfully updated values.", Toast.LENGTH_SHORT).show();
                         }
@@ -248,9 +251,43 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                         TodoTasksRepositoryImpl.this._database.delete(TodoTasksTable.tableName,
                                 TodoTasksTable.id + " =?",
                                 new String[]{String.valueOf(todoTask.getId())});
+                        if(!_callbacks.isEmpty()) {
+                            for (RepositoryOnDataChangedCallback callback : TodoTasksRepositoryImpl._callbacks) {
+                                callback.onDataChanged();
+                            }
+                        }
+                    }
+                }
+        );
+    }
 
-                        if(TodoTasksRepositoryImpl.this.callback != null) {
-                            TodoTasksRepositoryImpl.this.callback.onDataChanged();
+    @Override
+    public void deleteAll(List<TodoTask> todoTasks) {
+        this._executorService.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        if (todoTasks == null || todoTasks.isEmpty()) return;
+
+                        // Build WHERE clause
+                        StringBuilder whereClause = new StringBuilder("id IN (");
+                        String[] args = new String[todoTasks.size()];
+                        for (int i = 0; i < todoTasks.size(); i++) {
+                            whereClause.append("?");
+                            if (i != todoTasks.size() - 1) {
+                                whereClause.append(", ");
+                            }
+                            args[i] = String.valueOf(todoTasks.get(i).getId());
+                        }
+                        whereClause.append(")");
+
+                        // Perform delete
+                        _database.delete(TodoTasksTable.tableName, whereClause.toString(), args);
+
+                        if(!_callbacks.isEmpty()) {
+                            for (RepositoryOnDataChangedCallback callback : TodoTasksRepositoryImpl._callbacks) {
+                                callback.onDataChanged();
+                            }
                         }
                     }
                 }

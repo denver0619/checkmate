@@ -3,6 +3,7 @@ package com.gdiff.checkmate.presentation.fragments.main;
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -62,8 +63,7 @@ public class TasksSwipeCallback extends ItemTouchHelper.Callback {
         if (direction == ItemTouchHelper.LEFT) {
             //TODO: launch delete intent
             _tasksSwipeActionCallback.actionCallback(
-                    ((TasksAdapter.ItemViewHolder) viewHolder)
-                            .getTaskModel(),
+                    ((TasksAdapter.ItemViewHolder)viewHolder).getTaskModel(),
                     viewHolder
             );
         }

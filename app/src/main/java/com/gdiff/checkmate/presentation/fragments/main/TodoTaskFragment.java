@@ -28,6 +28,8 @@ import com.gdiff.checkmate.presentation.activities.todotask.TodoTaskAddActivity;
 import com.gdiff.checkmate.presentation.activities.todotask.TodoTaskEditActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.util.List;
+
 public class TodoTaskFragment extends Fragment {
 
     private TodoTaskViewModel mViewModel;
@@ -45,33 +47,57 @@ public class TodoTaskFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mViewModel = new ViewModelProvider(requireActivity()).get(TodoTaskViewModel.class);
-        tasksAdapter = new TasksAdapter(new TasksAdapter.OnTaskItemClickListener() {
-            @Override
-            public void onTaskClick(TaskModel taskModel) {
-                TodoTask todoTask = (TodoTask) taskModel ;
-                Intent intent = new Intent(requireActivity(), TodoTaskEditActivity.class);
-                intent.putExtra(IntentExtraConstantNames.keyTaskModel, taskModel);
-                requireActivity().startActivity(intent);
-            }
-        });
+        tasksAdapter = new TasksAdapter();
+        tasksAdapter.setOnTaskItemClickListener(
+                new TasksAdapter.OnTaskItemClickListener() {
+                    @Override
+                    public void onTaskClick(TaskModel taskModel) {
+                        Intent intent = new Intent(requireActivity(), TodoTaskEditActivity.class);
+                        intent.putExtra(IntentExtraConstantNames.keyTaskModel, taskModel);
+                        requireActivity().startActivity(intent);
+                    }
+                }
+        );
+
+        tasksAdapter.setOnDeleteAllItemClickListener(
+                new TasksAdapter.OnDeleteAllItemClickListener() {
+                    @Override
+                    public void onDeleteAllClick(List<? extends TaskModel> taskModels, String taskGroupTitle) {
+                        new MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("Delete all " + taskGroupTitle + " ?")
+                                .setMessage("This action cannot be undone.")
+                                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                                    }
+                                })
+                                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        mViewModel.removeAllTasks(taskModels);
+                                    }
+                                })
+                                .show();
+
+                    }
+                }
+        );
+
+
+        tasksAdapter.setOnTaskDoneClickListener(
+                new TasksAdapter.OnTaskDoneClickListener() {
+                    @Override
+                    public void onTaskDone(TaskModel taskModel, boolean isDone) {
+                        TodoTask todoTask = (TodoTask) taskModel;
+                        ((TodoTask) taskModel).setStatus(isDone);
+                        mViewModel.updateTask(todoTask);
+                    }
+                }
+        );
         todoTaskBinding.recyclerViewTasks.setLayoutManager(new LinearLayoutManager(requireContext()));
         todoTaskBinding.recyclerViewTasks.setItemAnimator(new DefaultItemAnimator());
         todoTaskBinding.recyclerViewTasks.setAdapter(tasksAdapter);
-
-//        mViewModel.getModelList()
-//
-//                .observe(
-//                        getViewLifecycleOwner(),
-//                        new Observer<List<? extends TaskModel>>() {
-//                            @Override
-//                            public void onChanged(List<? extends TaskModel> taskModels) {
-//                                TodoTaskFragment.this.tasksAdapter.updateModels(taskModels);
-//                                TodoTaskFragment.this.tasksAdapter.notifyItemInserted(taskModels.size());
-//                                todoTaskBinding.recyclerView.setVisibility(taskModels.isEmpty()?View.GONE:View.VISIBLE);
-//                                todoTaskBinding.textWhenEmpty.setVisibility(!taskModels.isEmpty()?View.GONE:View.VISIBLE);
-//                            }
-//                        }
-//                );
 
         mViewModel.getTaskGroupLists()
                 .observe(
@@ -95,17 +121,15 @@ public class TodoTaskFragment extends Fragment {
                                 todoTaskBinding.textWhenEmpty
                                         .setVisibility(
                                                 (!taskGroupListsDTO.getUnfinishedTasks().isEmpty()
-                                                && !taskGroupListsDTO.getFinishedTasks().isEmpty()
-                                                && !taskGroupListsDTO.getExpiredTasks().isEmpty())
-                                                ? View.VISIBLE : View.GONE);
+                                                || !taskGroupListsDTO.getFinishedTasks().isEmpty()
+                                                || !taskGroupListsDTO.getExpiredTasks().isEmpty())
+                                                ? View.GONE : View.VISIBLE);
                             }
                         }
                 );
 
 
         // Create and Register Callback to repository to notify adapter and recycler view
-        // TODO: LOGIC WHEN SWITCHING STATUS OF TASK
-        // TODO: XML SCROLLVIEW -> LINEAR -> RECYCLERVIEW, LINEAR(TOGGLE VISIBILITY WHEN THERES NO FINISHED TASK) -> TEXTVIEW (TITLE: FINISHED TASKS), RECYCLERVIEW (BOTH RECYCLERVIEW STOP SCROLL)
         RepositoryOnDataChangedCallback onDataChangedCallback =
                 new RepositoryOnDataChangedCallback() {
                     @Override
@@ -143,20 +167,31 @@ public class TodoTaskFragment extends Fragment {
                                 new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
-                                        recyclerView.getAdapter().notifyItemChanged(viewHolder.getAdapterPosition());
+                                        if (recyclerView.getAdapter() != null){
+//                                            recyclerView.getAdapter().notifyItemChanged(viewHolder.getAdapterPosition());
+                                        }
                                     }
                                 })
                         .setPositiveButton("Delete",
                                 new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
-                                        int position = viewHolder.getAdapterPosition();
                                         if (recyclerView.getAdapter() != null) {
-                                            ((TasksAdapter) recyclerView.getAdapter()).getModels().remove(position);
-                                            recyclerView.getAdapter().notifyItemRemoved(position);
+                                            mViewModel.removeTask(
+                                                    todoTask
+                                            );
                                         }
                                     }
-                                }).show();
+                                }).show().setOnDismissListener(
+                                new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialogInterface) {
+                                        if (recyclerView.getAdapter() != null){
+                                            recyclerView.getAdapter().notifyItemChanged(viewHolder.getAdapterPosition());
+                                        }
+                                    }
+                                }
+                        );
             }})
 
         );

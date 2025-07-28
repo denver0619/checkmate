@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
@@ -23,9 +24,10 @@ import java.util.stream.Stream;
 
 //reference material
 //https://www.digitalocean.com/community/tutorials/android-recyclerview-example
-public class TasksAdapter extends RecyclerView.Adapter {
+public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private OnTaskItemClickListener _onTaskItemClickListener;
     private OnDeleteAllItemClickListener _onDeleteAllItemClickListener;
+    private OnTaskDoneClickListener _onOnTaskDoneClickListener;
     private List<TasksAdapterViewType> _viewList;
     private List<? extends TaskModel> _unfinishedModelList;
     private List<? extends TaskModel> _finishedModelList;
@@ -37,20 +39,23 @@ public class TasksAdapter extends RecyclerView.Adapter {
         private static final String EXPIRED_TITLE = "Expired Tasks";
     }
 
-    public TasksAdapter(OnTaskItemClickListener onTaskItemClickListener) {
+    public TasksAdapter() {
         this._viewList = new ArrayList<>();
         this._unfinishedModelList = new ArrayList<>();
         this._finishedModelList = new ArrayList<>();
         this._expiredModelList = new ArrayList<>();
-        this._onTaskItemClickListener = onTaskItemClickListener;
     }
 
     public interface OnTaskItemClickListener {
         void onTaskClick(TaskModel taskModel);
     }
 
-    public interface OnDeleteAllItemClickListener{
-        void onDeleteAllClick(List<?extends TaskModel> taskModels);
+    public interface OnDeleteAllItemClickListener {
+        void onDeleteAllClick(List<?extends TaskModel> taskModels, String taskGroupTitle);
+    }
+
+    public interface OnTaskDoneClickListener {
+        void onTaskDone(TaskModel taskModel, boolean isDone);
     }
 
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
@@ -125,16 +130,18 @@ public class TasksAdapter extends RecyclerView.Adapter {
         }
 
         public void bind(List<? extends TaskModel> taskModels, String headerTitle) {
+            this._taskModels = taskModels;
             this._groupHeaderBinding.headerTitle.setText(headerTitle);
         }
 
         public void bind(List<? extends TaskModel> taskModels, String headerTitle, OnDeleteAllItemClickListener listener) {
+            this._taskModels = taskModels;
             this._groupHeaderBinding.headerTitle.setText(headerTitle);
             this._groupHeaderBinding.buttonDeleteAll.setOnClickListener(
                     new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            listener.onDeleteAllClick(HeaderViewHolder.this._taskModels);
+                            listener.onDeleteAllClick(HeaderViewHolder.this._taskModels, headerTitle);
                         }
                     }
             );
@@ -149,16 +156,6 @@ public class TasksAdapter extends RecyclerView.Adapter {
         }
     }
 
-//    // Create new views (invoked by the layout manager)
-//    @NonNull
-//    @Override
-//    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-//        // Create a new view, which defines the UI of the list item
-//        LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-//        ItemTaskListBinding taskListItemBinding = ItemTaskListBinding.inflate(inflater, viewGroup, false);
-//        return new ViewHolder(taskListItemBinding.getRoot(), taskListItemBinding);
-//    }
-
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -167,7 +164,6 @@ public class TasksAdapter extends RecyclerView.Adapter {
         || viewType == TasksAdapterViewType.TASK_HEADER_EXPIRED) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
             ItemGroupHeaderBinding itemGroupHeaderBinding = ItemGroupHeaderBinding.inflate(inflater, parent, false);
-            Log.d("======================", "a header is created");
             return new HeaderViewHolder(itemGroupHeaderBinding.getRoot(), itemGroupHeaderBinding);
         }
         else  {
@@ -179,14 +175,14 @@ public class TasksAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        TasksAdapterViewType currentViewType = this._viewList.get(position);
+        int adapterPosition = holder.getAdapterPosition();
+        TasksAdapterViewType currentViewType = this._viewList.get(adapterPosition);
         if (currentViewType != null ) {
             switch (currentViewType.getType()) {
                 case TasksAdapterViewType.TASK_HEADER_UNFINISHED:
                     HeaderViewHolder unfinishedHeaderHolder = ((HeaderViewHolder) holder);
                     unfinishedHeaderHolder.getBinding().buttonDeleteAll.setVisibility(View.GONE);
                     unfinishedHeaderHolder.bind(this._unfinishedModelList, currentViewType.getHeaderTitle());
-                    Log.d("========================", "unfinishedHeaderBound");
                     break;
                 case TasksAdapterViewType.TASK_HEADER_FINISHED:
                     HeaderViewHolder finishedHeaderHolder = ((HeaderViewHolder) holder);
@@ -211,31 +207,73 @@ public class TasksAdapter extends RecyclerView.Adapter {
                 case TasksAdapterViewType.TASK_ITEM_UNFINISHED:
                     ItemViewHolder unfinishedItemViewHolder = ((ItemViewHolder) holder);
                     unfinishedItemViewHolder.getBinding().fgCard.animate().translationX(0f).setDuration(300).start();
+                    unfinishedItemViewHolder.getBinding().checkBox.setOnCheckedChangeListener(null);
+                    unfinishedItemViewHolder.getBinding().checkBox.setChecked(
+                            this._viewList.get(adapterPosition).getTaskModel().isDone()
+                    );
+                    if (this._onOnTaskDoneClickListener != null) {
+                        if (adapterPosition == RecyclerView.NO_POSITION) return;
+                        TaskModel model = _viewList.get(adapterPosition).getTaskModel();
+                        unfinishedItemViewHolder.getBinding().checkBox.setOnCheckedChangeListener(
+                                new CompoundButton.OnCheckedChangeListener() {
+                                    @Override
+                                    public void onCheckedChanged(@NonNull CompoundButton compoundButton, boolean b) {
+                                        TasksAdapter.this._onOnTaskDoneClickListener.onTaskDone(
+                                                model,
+                                                b
+                                        );
+                                    }
+                                }
+                        );
+                    }
                     if (this._onTaskItemClickListener == null) {
-                        unfinishedItemViewHolder.bind(this._viewList.get(position).getTaskModel(), TasksAdapterViewType.TASK_ITEM_UNFINISHED);
+                        unfinishedItemViewHolder.bind(this._viewList.get(adapterPosition).getTaskModel(), TasksAdapterViewType.TASK_ITEM_UNFINISHED);
                     }
                     else {
-                        unfinishedItemViewHolder.bind(this._viewList.get(position).getTaskModel(), this._onTaskItemClickListener, TasksAdapterViewType.TASK_ITEM_UNFINISHED);
+                        unfinishedItemViewHolder.bind(this._viewList.get(adapterPosition).getTaskModel(), this._onTaskItemClickListener, TasksAdapterViewType.TASK_ITEM_UNFINISHED);
                     }
                     break;
                 case TasksAdapterViewType.TASK_ITEM_FINISHED:
                     ItemViewHolder finishedItemViewHolder = ((ItemViewHolder) holder);
                     finishedItemViewHolder.getBinding().fgCard.animate().translationX(0f).setDuration(300).start();
+                    finishedItemViewHolder.getBinding().checkBox.setOnCheckedChangeListener(null);
+                    finishedItemViewHolder.getBinding().checkBox.setChecked(
+                            this._viewList.get(adapterPosition).getTaskModel().isDone()
+                    );
+                    if (this._onOnTaskDoneClickListener != null) {
+                        if (adapterPosition == RecyclerView.NO_POSITION) return;
+                        TaskModel model = _viewList.get(adapterPosition).getTaskModel();
+                        finishedItemViewHolder.getBinding().checkBox.setOnCheckedChangeListener(
+                                new CompoundButton.OnCheckedChangeListener() {
+                                    @Override
+                                    public void onCheckedChanged(@NonNull CompoundButton compoundButton, boolean b) {
+                                        TasksAdapter.this._onOnTaskDoneClickListener.onTaskDone(
+                                                model,
+                                                b
+                                        );
+                                    }
+                                }
+                        );
+                    }
                     if (this._onTaskItemClickListener == null) {
-                        finishedItemViewHolder.bind(this._viewList.get(position).getTaskModel(), TasksAdapterViewType.TASK_ITEM_FINISHED);
+                        finishedItemViewHolder.bind(this._viewList.get(adapterPosition).getTaskModel(), TasksAdapterViewType.TASK_ITEM_FINISHED);
                     }
                     else {
-                        finishedItemViewHolder.bind(this._viewList.get(position).getTaskModel(), this._onTaskItemClickListener, TasksAdapterViewType.TASK_ITEM_FINISHED);
+                        finishedItemViewHolder.bind(this._viewList.get(adapterPosition).getTaskModel(), this._onTaskItemClickListener, TasksAdapterViewType.TASK_ITEM_FINISHED);
                     }
                     break;
                 case TasksAdapterViewType.TASK_ITEM_EXPIRED:
                     ItemViewHolder expiredItemViewHolder = ((ItemViewHolder) holder);
                     expiredItemViewHolder.getBinding().fgCard.animate().translationX(0f).setDuration(300).start();
+                    expiredItemViewHolder.getBinding().checkBox.setChecked(
+                            this._viewList.get(adapterPosition).getTaskModel().isDone()
+                    );
+                    expiredItemViewHolder.getBinding().checkBox.setEnabled(false);
                     if (this._onTaskItemClickListener == null) {
-                        expiredItemViewHolder.bind(this._viewList.get(position).getTaskModel(), TasksAdapterViewType.TASK_ITEM_EXPIRED);
+                        expiredItemViewHolder.bind(this._viewList.get(adapterPosition).getTaskModel(), TasksAdapterViewType.TASK_ITEM_EXPIRED);
                     }
                     else {
-                        expiredItemViewHolder.bind(this._viewList.get(position).getTaskModel(), this._onTaskItemClickListener, TasksAdapterViewType.TASK_ITEM_EXPIRED);
+                        expiredItemViewHolder.bind(this._viewList.get(adapterPosition).getTaskModel(), this._onTaskItemClickListener, TasksAdapterViewType.TASK_ITEM_EXPIRED);
                     }
                     break;
                 default:
@@ -243,20 +281,6 @@ public class TasksAdapter extends RecyclerView.Adapter {
             }
         }
     }
-
-//    // Replace the contents of a view (invoked by the layout manager)
-//    @Override
-//    public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int position) {
-//
-//        // Get element from your dataset at this position and replace the
-//        // contents of the view with that element
-//        viewHolder.getBinding().fgCard.animate().translationX(0f).setDuration(300).start();
-//        if (_onTaskItemClickListener == null) {
-//            viewHolder.bind(_modelList.get(position));
-//        } else {
-//            viewHolder.bind(_modelList.get(position), _onTaskItemClickListener);
-//        }
-//    }
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
@@ -317,9 +341,6 @@ public class TasksAdapter extends RecyclerView.Adapter {
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffUtilCallback);
         this._viewList.clear();
         this._viewList.addAll(newViewList);
-        for(TasksAdapterViewType adapterViewType: newViewList) {
-            Log.d("=========================", String.valueOf(adapterViewType.getType()));
-        }
         diffResult.dispatchUpdatesTo(this);
     }
 
@@ -329,11 +350,6 @@ public class TasksAdapter extends RecyclerView.Adapter {
         result.addAll(this._finishedModelList);
         result.addAll(this._expiredModelList);
         return result;
-//                Stream.of(this._unfinishedModelList, Stream.of(this._finishedModelList,this._expiredModelList)
-//                        .flatMap(Collection::stream)
-//                        .collect(Collectors.toList()))
-//                .flatMap(Collection::stream)
-//                .collect(Collectors.toList());
     }
 
     public List<TasksAdapterViewType> getViewTypeList() {
@@ -345,5 +361,8 @@ public class TasksAdapter extends RecyclerView.Adapter {
     }
     public void setOnDeleteAllItemClickListener(OnDeleteAllItemClickListener onDeleteAllItemClickListener) {
         this._onDeleteAllItemClickListener = onDeleteAllItemClickListener;
+    }
+    public void setOnTaskDoneClickListener(OnTaskDoneClickListener onTaskDoneClickListener) {
+        this._onOnTaskDoneClickListener = onTaskDoneClickListener;
     }
 }
