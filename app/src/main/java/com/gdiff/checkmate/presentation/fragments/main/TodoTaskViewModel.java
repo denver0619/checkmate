@@ -1,6 +1,7 @@
 package com.gdiff.checkmate.presentation.fragments.main;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -22,6 +23,7 @@ public class TodoTaskViewModel extends AndroidViewModel {
 
     private final Application _applicationContext;
     private RepositoryOnDataChangedCallback _repositoryCallback;
+    FetchTasksUseCase _fetchTasksUseCase;
 
     public TodoTaskViewModel(@NonNull Application application) {
         super(application);
@@ -37,14 +39,14 @@ public class TodoTaskViewModel extends AndroidViewModel {
 
     public void loadData(RepositoryOnDataChangedCallback repositoryCallback) {
         this._repositoryCallback = repositoryCallback;
+        BaseRepository baseRepository = TodoTasksRepositoryImpl.getInstance(_applicationContext);
+        this._fetchTasksUseCase = new FetchTasksUseCase(baseRepository);
         TodoTasksRepositoryImpl.getInstance(this._applicationContext).registerCallback(repositoryCallback);
         reloadData();
     }
 
     public void reloadData() {
-        BaseRepository baseRepository = TodoTasksRepositoryImpl.getInstance(_applicationContext);
-        FetchTasksUseCase fetchTasksUseCase = new FetchTasksUseCase(baseRepository);
-        fetchTasksUseCase.getTasks(
+        this._fetchTasksUseCase.getTasks(
                 new FetchTasksUseCase.Callback() {
                     @Override
                     public void onResult(TaskGroupListsDTO taskGroupListsDTO) {
@@ -82,6 +84,5 @@ public class TodoTaskViewModel extends AndroidViewModel {
         if (this._repositoryCallback != null) {
             TodoTasksRepositoryImpl.getInstance(_applicationContext).unregisterCallback(_repositoryCallback);
         }
-        TodoTasksRepositoryImpl.getInstance(_applicationContext).onDestroy();
     }
 }

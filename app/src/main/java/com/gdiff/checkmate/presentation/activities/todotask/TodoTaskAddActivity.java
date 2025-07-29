@@ -16,6 +16,7 @@ import com.gdiff.checkmate.R;
 import com.gdiff.checkmate.application.callbacks.GeneralCallback;
 import com.gdiff.checkmate.databinding.ActivityTodoTaskAddBinding;
 import com.gdiff.checkmate.domain.models.TodoTask;
+import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.presentation.activities.BaseActivity;
 import com.gdiff.checkmate.presentation.activities.BaseTaskActivity;
 
@@ -59,9 +60,9 @@ public class TodoTaskAddActivity extends BaseTaskActivity {
                                 todoTask.setContent(activityTodoTaskAddBinding.todoTaskContent.getText().toString());
 
                                 if (checksPassed) {
-                                    viewModel.addTodoTask(todoTask, new GeneralCallback() {
+                                    viewModel.addTodoTask(todoTask, new RepositoryOnDataChangedCallback() {
                                         @Override
-                                        public void onFinish() {
+                                        public void onDataChanged() {
                                             finish();
                                         }
                                     });

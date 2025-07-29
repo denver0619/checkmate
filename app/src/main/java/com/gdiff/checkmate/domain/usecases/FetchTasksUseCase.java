@@ -1,5 +1,7 @@
 package com.gdiff.checkmate.domain.usecases;
 
+import android.util.Log;
+
 import com.gdiff.checkmate.domain.datatransferobjects.TaskGroupListsDTO;
 import com.gdiff.checkmate.domain.models.TaskModel;
 import com.gdiff.checkmate.domain.repositories.BaseRepository;
@@ -38,6 +40,7 @@ public class FetchTasksUseCase {
                                 unfinishedTasks.add(model);
                             }
                         }
+
                         result.setUnfinishedTasks(unfinishedTasks);
                         result.setFinishedTasks(finishedTasks);
                         result.setExpiredTasks(expiredTasks);

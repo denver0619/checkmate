@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,6 +64,7 @@ public class TodoTaskFragment extends Fragment {
                 new TasksAdapter.OnDeleteAllItemClickListener() {
                     @Override
                     public void onDeleteAllClick(List<? extends TaskModel> taskModels, String taskGroupTitle) {
+
                         new MaterialAlertDialogBuilder(requireContext())
                                 .setTitle("Delete all " + taskGroupTitle + " ?")
                                 .setMessage("This action cannot be undone.")

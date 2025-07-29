@@ -15,6 +15,7 @@ import com.gdiff.checkmate.application.constants.IntentExtraConstantNames;
 import com.gdiff.checkmate.databinding.ActivityTodoTaskEditBinding;
 import com.gdiff.checkmate.domain.models.TaskModel;
 import com.gdiff.checkmate.domain.models.TodoTask;
+import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.presentation.activities.BaseActivity;
 import com.gdiff.checkmate.presentation.activities.BaseTaskActivity;
 
@@ -58,7 +59,27 @@ public class TodoTaskEditActivity extends BaseTaskActivity {
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-
+                                if (todoTask != null) {
+                                    todoTask.setContent(
+                                            (TodoTaskEditActivity.this
+                                                    .todoTaskEditBinding
+                                                    .todoTaskContent
+                                                    .getText() != null)
+                                                    ?TodoTaskEditActivity.this
+                                                    .todoTaskEditBinding
+                                                    .todoTaskContent
+                                                    .getText()
+                                                    .toString()
+                                                    :""
+                                    );
+                                    viewModel.editTask(todoTask,
+                                            new RepositoryOnDataChangedCallback() {
+                                                @Override
+                                                public void onDataChanged() {
+                                                    finish();
+                                                }
+                                            });
+                                }
                             }
                         }
                 );

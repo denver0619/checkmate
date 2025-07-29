@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.gdiff.checkmate.domain.models.TodoTask;
@@ -17,9 +18,12 @@ import com.gdiff.checkmate.infrastructure.database.TaskDbHelper;
 import com.gdiff.checkmate.infrastructure.database.tables.TodoTasksTable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     private final SQLiteDatabase _database;
@@ -269,20 +273,25 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                     public void run() {
                         if (todoTasks == null || todoTasks.isEmpty()) return;
 
-                        // Build WHERE clause
-                        StringBuilder whereClause = new StringBuilder("id IN (");
-                        String[] args = new String[todoTasks.size()];
-                        for (int i = 0; i < todoTasks.size(); i++) {
-                            whereClause.append("?");
-                            if (i != todoTasks.size() - 1) {
-                                whereClause.append(", ");
-                            }
-                            args[i] = String.valueOf(todoTasks.get(i).getId());
-                        }
-                        whereClause.append(")");
+                        String placeholders = String.join(",", Collections.nCopies(todoTasks.size(), "?"));
 
-                        // Perform delete
-                        _database.delete(TodoTasksTable.tableName, whereClause.toString(), args);
+                        TodoTasksRepositoryImpl.this._database.delete(TodoTasksTable.tableName,
+                                TodoTasksTable.id + " IN(" + placeholders + ")",
+                                todoTasks.stream()
+                                        .map(
+                                                new Function<TodoTask, String>() {
+                                                    @Override
+                                                    public String apply(TodoTask todoTask) {
+                                                        return String.valueOf(todoTask.getId());
+                                                    }
+                                                }
+                                        )
+                                        .toArray(String[]::new));
+//                        for (TodoTask todoTask : todoTasks) {
+//                            TodoTasksRepositoryImpl.this._database.delete(TodoTasksTable.tableName,
+//                                    TodoTasksTable.id + " =?",
+//                                    new String[]{String.valueOf(todoTask.getId())});
+//                        }
 
                         if(!_callbacks.isEmpty()) {
                             for (RepositoryOnDataChangedCallback callback : TodoTasksRepositoryImpl._callbacks) {

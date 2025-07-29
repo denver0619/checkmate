@@ -67,8 +67,6 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             this._taskListItemBinding = taskListItemBinding;
         }
 
-
-
         public void bind(TaskModel taskModel, int itemType) {
             this._taskModel = taskModel;
             this._taskListItemBinding.content.setText(taskModel.content());
@@ -120,7 +118,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
+    public class HeaderViewHolder extends RecyclerView.ViewHolder {
         private final ItemGroupHeaderBinding _groupHeaderBinding;
         private List<? extends TaskModel> _taskModels;
 
@@ -129,19 +127,25 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             this._groupHeaderBinding = groupHeaderBinding;
         }
 
-        public void bind(List<? extends TaskModel> taskModels, String headerTitle) {
+        public void bind(List<? extends TaskModel> taskModels, String headerTitle, int headerType) {
             this._taskModels = taskModels;
             this._groupHeaderBinding.headerTitle.setText(headerTitle);
         }
 
-        public void bind(List<? extends TaskModel> taskModels, String headerTitle, OnDeleteAllItemClickListener listener) {
+        public void bind(List<? extends TaskModel> taskModels, String headerTitle, int headerType, OnDeleteAllItemClickListener listener) {
             this._taskModels = taskModels;
             this._groupHeaderBinding.headerTitle.setText(headerTitle);
             this._groupHeaderBinding.buttonDeleteAll.setOnClickListener(
                     new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            listener.onDeleteAllClick(HeaderViewHolder.this._taskModels, headerTitle);
+                            if (headerType == TasksAdapterViewType.TASK_HEADER_UNFINISHED) {
+                                listener.onDeleteAllClick(TasksAdapter.this._unfinishedModelList, headerTitle);
+                            } else if (headerType ==  TasksAdapterViewType.TASK_HEADER_FINISHED) {
+                                listener.onDeleteAllClick(TasksAdapter.this._finishedModelList, headerTitle);
+                            } else if (headerType == TasksAdapterViewType.TASK_HEADER_EXPIRED) {
+                                listener.onDeleteAllClick(TasksAdapter.this._expiredModelList, headerTitle);
+                            }
                         }
                     }
             );
@@ -182,26 +186,26 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 case TasksAdapterViewType.TASK_HEADER_UNFINISHED:
                     HeaderViewHolder unfinishedHeaderHolder = ((HeaderViewHolder) holder);
                     unfinishedHeaderHolder.getBinding().buttonDeleteAll.setVisibility(View.GONE);
-                    unfinishedHeaderHolder.bind(this._unfinishedModelList, currentViewType.getHeaderTitle());
+                    unfinishedHeaderHolder.bind(this._unfinishedModelList, currentViewType.getHeaderTitle(), TasksAdapterViewType.TASK_HEADER_UNFINISHED);
                     break;
                 case TasksAdapterViewType.TASK_HEADER_FINISHED:
                     HeaderViewHolder finishedHeaderHolder = ((HeaderViewHolder) holder);
                     finishedHeaderHolder.getBinding().buttonDeleteAll.setVisibility(View.VISIBLE);
                     if (this._onDeleteAllItemClickListener == null) {
-                        finishedHeaderHolder.bind(this._finishedModelList, currentViewType.getHeaderTitle());
+                        finishedHeaderHolder.bind(this._finishedModelList, currentViewType.getHeaderTitle(), TasksAdapterViewType.TASK_HEADER_FINISHED);
                     }
                     else {
-                        finishedHeaderHolder.bind(this._finishedModelList, currentViewType.getHeaderTitle(), this._onDeleteAllItemClickListener);
+                        finishedHeaderHolder.bind(this._finishedModelList, currentViewType.getHeaderTitle(), TasksAdapterViewType.TASK_HEADER_FINISHED, this._onDeleteAllItemClickListener);
                     }
                     break;
                 case TasksAdapterViewType.TASK_HEADER_EXPIRED:
                     HeaderViewHolder expiredHeaderHolder = ((HeaderViewHolder) holder);
                     expiredHeaderHolder.getBinding().buttonDeleteAll.setVisibility(View.VISIBLE);
                     if (this._onDeleteAllItemClickListener == null) {
-                        expiredHeaderHolder.bind(this._expiredModelList, currentViewType.getHeaderTitle());
+                        expiredHeaderHolder.bind(this._expiredModelList, currentViewType.getHeaderTitle(), TasksAdapterViewType.TASK_HEADER_EXPIRED);
                     }
                     else {
-                        expiredHeaderHolder.bind(this._expiredModelList, currentViewType.getHeaderTitle(), this._onDeleteAllItemClickListener);
+                        expiredHeaderHolder.bind(this._expiredModelList, currentViewType.getHeaderTitle(), TasksAdapterViewType.TASK_HEADER_EXPIRED, this._onDeleteAllItemClickListener);
                     }
                     break;
                 case TasksAdapterViewType.TASK_ITEM_UNFINISHED:
