@@ -1,8 +1,13 @@
 package com.gdiff.checkmate.domain.models;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+
+import com.gdiff.checkmate.infrastructure.database.tables.TodoTasksTable;
+
 import java.util.Objects;
 
-public class TodoTask extends TaskModel {
+public class TodoTask extends TaskModel<TodoTask> {
     private int _id;
     private String _content;
     private Boolean _status;
@@ -53,6 +58,14 @@ public class TodoTask extends TaskModel {
     @Override
     public String content() {
         return  this._content;
+    }
+
+    @Override
+    public TodoTask fromCursor(Cursor cursor) throws SQLiteException {
+        this._id = cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id));
+        this._content = cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content));
+        this._status = cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0; //hack from int to boolean
+        return this;
     }
 
     @Override

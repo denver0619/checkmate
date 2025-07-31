@@ -28,15 +28,15 @@ import java.util.stream.Collectors;
 public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     private final SQLiteDatabase _database;
     private final Context _context;
+    private static ExecutorService _executorService;
     private static List<RepositoryOnDataChangedCallback> _callbacks;
     private static volatile TodoTasksRepositoryImpl _instance;
-    private final ExecutorService _executorService;
 
     private TodoTasksRepositoryImpl(Application applicationContext) {
         this._context = applicationContext;
         this._database = TaskDbHelper.getInstance(applicationContext).getWritableDatabase();
         _callbacks = new ArrayList<>();
-        this._executorService = Executors.newSingleThreadExecutor();
+        _executorService = Executors.newSingleThreadExecutor();
     }
 
     public static TodoTasksRepositoryImpl getInstance(Application applicationContext) {
@@ -60,36 +60,6 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
         _callbacks.remove(callback);
     }
 
-
-//    @Override
-//    public List<TodoTask> getAll() {
-//        String query = "SELECT * FROM " + TodoTasksTable.tableName + ";";
-//        Cursor cursor = null;
-//        List<TodoTask> result = new ArrayList<>();
-//        if (this._database != null) {
-//            cursor = this._database.rawQuery(query, null);
-//        }
-//
-//        if (cursor != null) {
-//            try {
-//                for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-//                    result.add(
-//                            new TodoTask(
-//                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id)),
-//                                    cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content)),
-//                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0 //hack from int to boolean
-//                            )
-//                    );
-//                }
-//            } catch (SQLiteException err) {
-//
-//            } finally {
-//                cursor.close();
-//            }
-//        }
-//        return result;
-//    }
-
     @Override
     public void getAll(RepositoryListFetchResultCallback fetchCallback) {
         _executorService.submit(
@@ -107,14 +77,10 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                             try {
                                 for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                                     result.add(
-                                            new TodoTask(
-                                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id)),
-                                                    cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content)),
-                                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0 //hack from int to boolean
-                                            )
+                                            new TodoTask().fromCursor(cursor)
                                     );
                                 }
-                            } catch (SQLiteException err) {
+                            } catch (SQLiteException SQLe) {
 
                             } finally {
                                 cursor.close();
@@ -126,39 +92,9 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
         );
     }
 
-//    @Override
-//    public TodoTask getById(int id) {
-//        String query = "SELECT * FROM " + TodoTasksTable.tableName + " WHERE id = " + String.valueOf(id) + " ;";
-//        Cursor cursor = null;
-//        List<TodoTask> result = new ArrayList<>();
-//
-//        if (this._database != null) {
-//            cursor = this._database.rawQuery(query, null);
-//        }
-//
-//        if (cursor != null ) {
-//            try {
-//                for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-//                    result.add(
-//                            new TodoTask(
-//                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id)),
-//                                    cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content)),
-//                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0 //hack from int to boolean
-//                            )
-//                    );
-//                }
-//            } catch (SQLiteException err) {
-//
-//            } finally {
-//                cursor.close();
-//            }
-//        }
-//        return (result.isEmpty())?null:result.get(0);
-//    }
-
     @Override
     public void getById(int id, RepositorySingleFetchResultCallback fetchCallback) {
-        this._executorService.submit(
+        _executorService.submit(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -174,14 +110,10 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                             try {
                                 for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                                     result.add(
-                                            new TodoTask(
-                                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.id)),
-                                                    cursor.getString(cursor.getColumnIndexOrThrow(TodoTasksTable.content)),
-                                                    cursor.getInt(cursor.getColumnIndexOrThrow(TodoTasksTable.status)) != 0 //hack from int to boolean
-                                            )
+                                            new TodoTask().fromCursor(cursor)
                                     );
                                 }
-                            } catch (SQLiteException err) {
+                            } catch (SQLiteException SQLe) {
 
                             } finally {
                                 cursor.close();
@@ -195,10 +127,11 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
 
     @Override
     public void add(TodoTask todoTask) {
-        this._executorService.submit(
+        _executorService.submit(
                 new Runnable() {
                     @Override
-                    public void run() {ContentValues values = new ContentValues();
+                    public void run() {
+                        ContentValues values = new ContentValues();
                         values.put(TodoTasksTable.content, todoTask.getContent());
                         values.put(TodoTasksTable.status, todoTask.getStatus());
                         long result = TodoTasksRepositoryImpl.this._database.insert(TodoTasksTable.tableName, null, values);
@@ -219,7 +152,7 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
 
     @Override
     public void update(TodoTask todoTask) {
-        this._executorService.submit(
+        _executorService.submit(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -248,7 +181,7 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
 
     @Override
     public void delete(TodoTask todoTask) {
-        this._executorService.submit(
+        _executorService.submit(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -267,7 +200,7 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
 
     @Override
     public void deleteAll(List<TodoTask> todoTasks) {
-        this._executorService.submit(
+        _executorService.submit(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -287,12 +220,6 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                                                 }
                                         )
                                         .toArray(String[]::new));
-//                        for (TodoTask todoTask : todoTasks) {
-//                            TodoTasksRepositoryImpl.this._database.delete(TodoTasksTable.tableName,
-//                                    TodoTasksTable.id + " =?",
-//                                    new String[]{String.valueOf(todoTask.getId())});
-//                        }
-
                         if(!_callbacks.isEmpty()) {
                             for (RepositoryOnDataChangedCallback callback : TodoTasksRepositoryImpl._callbacks) {
                                 callback.onDataChanged();
@@ -303,11 +230,10 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
         );
     }
 
-
     @Override
     public void onDestroy() {
-        if(this._executorService != null) {
-            this._executorService.shutdown();
+        if(_executorService != null) {
+            _executorService.shutdown();
         }
     }
 }

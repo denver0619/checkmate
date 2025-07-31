@@ -1,12 +1,18 @@
 package com.gdiff.checkmate.domain.models;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+
+import com.gdiff.checkmate.infrastructure.database.tables.ScheduledTasksTable;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
 
-public class ScheduledTask extends TaskModel{
+public class ScheduledTask extends TaskModel<ScheduledTask>{
     private int _id;
     private String _content;
     private Boolean _status;
@@ -33,7 +39,7 @@ public class ScheduledTask extends TaskModel{
         this._content = content;
     }
 
-    public String get_content() {
+    public String getContent() {
         return  this._content;
     }
 
@@ -77,13 +83,24 @@ public class ScheduledTask extends TaskModel{
 
     @Override
     public Boolean isExpired() {
-        //Todo: date checks
-        return null;
+        return !getDueDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+                .isAfter(LocalDateTime.now());
     }
 
     @Override
     public String content() {
         return  this._content;
+    }
+
+    @Override
+    public ScheduledTask fromCursor(Cursor cursor) throws SQLiteException {
+        this._id = cursor.getInt(cursor.getColumnIndexOrThrow(ScheduledTasksTable.id));
+        this._content = cursor.getString(cursor.getColumnIndexOrThrow(ScheduledTasksTable.content));
+        this._status = cursor.getInt(cursor.getColumnIndexOrThrow(ScheduledTasksTable.status)) != 0; //hack from int to boolean
+        setDueDateString(cursor.getString(cursor.getColumnIndexOrThrow(ScheduledTasksTable.dueDate)));
+        return this;
     }
 
     @Override
