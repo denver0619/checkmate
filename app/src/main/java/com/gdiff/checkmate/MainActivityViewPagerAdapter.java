@@ -3,10 +3,10 @@ package com.gdiff.checkmate;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.gdiff.checkmate.presentation.fragments.main.TodoTaskFragment;
+import com.gdiff.checkmate.views.fragments.main.ScheduledTaskFragment;
+import com.gdiff.checkmate.views.fragments.main.TodoTaskFragment;
 
 public class MainActivityViewPagerAdapter extends FragmentStateAdapter {
 
@@ -27,7 +27,7 @@ public class MainActivityViewPagerAdapter extends FragmentStateAdapter {
                 break;
             case 1:
                 //placeHolder
-                result = new TodoTaskFragment();
+                result = new ScheduledTaskFragment();
                 break;
             case 2:
                 //placeHolder

@@ -1,7 +1,6 @@
-package com.gdiff.checkmate.presentation.fragments.main;
+package com.gdiff.checkmate.views.fragments.main;
 
 import android.app.Application;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -22,8 +21,8 @@ import java.util.List;
 public class TodoTaskViewModel extends AndroidViewModel {
 
     private final Application _applicationContext;
-    private RepositoryOnDataChangedCallback _repositoryCallback;
-    FetchTasksUseCase _fetchTasksUseCase;
+    private RepositoryOnDataChangedCallback _onDataChangedCallback;
+    private FetchTasksUseCase _fetchTasksUseCase;
 
     public TodoTaskViewModel(@NonNull Application application) {
         super(application);
@@ -38,7 +37,7 @@ public class TodoTaskViewModel extends AndroidViewModel {
     };
 
     public void loadData(RepositoryOnDataChangedCallback repositoryCallback) {
-        this._repositoryCallback = repositoryCallback;
+        this._onDataChangedCallback = repositoryCallback;
         BaseRepository baseRepository = TodoTasksRepositoryImpl.getInstance(_applicationContext);
         this._fetchTasksUseCase = new FetchTasksUseCase(baseRepository);
         TodoTasksRepositoryImpl.getInstance(this._applicationContext).registerCallback(repositoryCallback);
@@ -57,7 +56,7 @@ public class TodoTaskViewModel extends AndroidViewModel {
 
     }
 
-    public void removeTask(TodoTask todoTask) {
+    public void deleteTask(TodoTask todoTask) {
         TodoTasksRepositoryImpl.getInstance(_applicationContext)
                 .delete(todoTask);
     }
@@ -67,10 +66,10 @@ public class TodoTaskViewModel extends AndroidViewModel {
                 .update(todoTask);
     }
 
-    public void removeAllTasks(List<? extends TaskModel> taskModels) {
+    public void deleteAllTasks(List<? extends TaskModel<?>> taskModels) {
         List<TodoTask> todoTasks = new ArrayList<>();
         if (taskModels != null) {
-            for (TaskModel taskModel : taskModels) {
+            for (TaskModel<?> taskModel : taskModels) {
                 todoTasks.add((TodoTask) taskModel);
             }
         }
@@ -81,8 +80,8 @@ public class TodoTaskViewModel extends AndroidViewModel {
 
     @Override
     public void onCleared() {
-        if (this._repositoryCallback != null) {
-            TodoTasksRepositoryImpl.getInstance(_applicationContext).unregisterCallback(_repositoryCallback);
+        if (this._onDataChangedCallback != null) {
+            TodoTasksRepositoryImpl.getInstance(_applicationContext).unregisterCallback(_onDataChangedCallback);
         }
     }
 }

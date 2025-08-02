@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteException;
 
 import com.gdiff.checkmate.infrastructure.database.tables.ScheduledTasksTable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -83,10 +84,11 @@ public class ScheduledTask extends TaskModel<ScheduledTask>{
 
     @Override
     public Boolean isExpired() {
-        return !getDueDate().toInstant()
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = getDueDate().toInstant()
                 .atZone(ZoneId.systemDefault())
-                .toLocalDateTime()
-                .isAfter(LocalDateTime.now());
+                .toLocalDate();
+        return today.isAfter(dueDate);
     }
 
     @Override
@@ -112,7 +114,9 @@ public class ScheduledTask extends TaskModel<ScheduledTask>{
         return this._id == otherScheduledTask._id
                 && Objects.equals(this._content, otherScheduledTask._content)
                 && this._status == otherScheduledTask._status
-                && this._dueDate == otherScheduledTask._dueDate;
+                && this._dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().isEqual(
+                        otherScheduledTask.getDueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        );
     }
 
     @Override

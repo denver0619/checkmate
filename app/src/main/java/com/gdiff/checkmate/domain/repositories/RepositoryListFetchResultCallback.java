@@ -5,5 +5,5 @@ import com.gdiff.checkmate.domain.models.TaskModel;
 import java.util.List;
 
 public interface RepositoryListFetchResultCallback {
-    void onFetch(List<? extends TaskModel> modelList);
+    void onFetch(List<? extends TaskModel<?>> modelList);
 }

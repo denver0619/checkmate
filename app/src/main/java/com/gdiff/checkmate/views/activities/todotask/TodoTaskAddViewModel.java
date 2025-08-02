@@ -1,11 +1,10 @@
-package com.gdiff.checkmate.presentation.activities.todotask;
+package com.gdiff.checkmate.views.activities.todotask;
 
 import android.app.Application;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 
-import com.gdiff.checkmate.application.callbacks.GeneralCallback;
 import com.gdiff.checkmate.domain.models.TodoTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.infrastructure.repositories.TodoTasksRepositoryImpl;

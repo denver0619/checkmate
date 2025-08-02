@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.presentation.activities;
+package com.gdiff.checkmate.views.activities;
 
 import android.os.Bundle;
 

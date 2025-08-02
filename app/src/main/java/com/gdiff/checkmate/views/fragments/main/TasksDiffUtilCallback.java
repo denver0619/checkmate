@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.presentation.fragments.main;
+package com.gdiff.checkmate.views.fragments.main;
 
 import androidx.recyclerview.widget.DiffUtil;
 

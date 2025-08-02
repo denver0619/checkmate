@@ -13,10 +13,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Custom.Checkmate">
         <activity
-            android:name=".presentation.activities.todotask.TodoTaskEditActivity"
+            android:name=".views.activities.scheduledtask.ScheduledTaskEditActivity"
             android:exported="false" />
         <activity
-            android:name=".presentation.activities.todotask.TodoTaskAddActivity"
+            android:name=".views.activities.scheduledtask.ScheduledTaskAddActivity"
+            android:exported="false" />
+        <activity
+            android:name=".views.activities.todotask.TodoTaskEditActivity"
+            android:exported="false" />
+        <activity
+            android:name=".views.activities.todotask.TodoTaskAddActivity"
             android:exported="false"
             android:theme="@style/Theme.Custom.Checkmate" />
         <activity

@@ -1,11 +1,8 @@
-package com.gdiff.checkmate.presentation.activities;
+package com.gdiff.checkmate.views.activities;
 
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModelProvider;
-
-import com.gdiff.checkmate.presentation.activities.todotask.TodoTaskEditViewModel;
 
 public class BaseTaskActivity extends BaseActivity{
     @Override

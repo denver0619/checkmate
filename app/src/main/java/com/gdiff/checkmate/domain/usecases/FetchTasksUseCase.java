@@ -25,13 +25,13 @@ public class FetchTasksUseCase {
         _repository.getAll(
                 new RepositoryListFetchResultCallback() {
                     @Override
-                    public void onFetch(List<? extends TaskModel> modelList) {
+                    public void onFetch(List<? extends TaskModel<?>> modelList) {
                         TaskGroupListsDTO result = new TaskGroupListsDTO();
-                        List<TaskModel> unfinishedTasks = new ArrayList<>();
-                        List<TaskModel> finishedTasks = new ArrayList<>();
-                        List<TaskModel> expiredTasks = new ArrayList<>();
+                        List<TaskModel<?>> unfinishedTasks = new ArrayList<>();
+                        List<TaskModel<?>> finishedTasks = new ArrayList<>();
+                        List<TaskModel<?>> expiredTasks = new ArrayList<>();
 
-                        for (TaskModel model : modelList) {
+                        for (TaskModel<?> model : modelList) {
                             if (model.isExpired()) {
                                 expiredTasks.add(model);
                             } else if (model.isDone()) {

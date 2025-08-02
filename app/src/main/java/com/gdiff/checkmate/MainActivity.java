@@ -11,11 +11,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.gdiff.checkmate.databinding.ActivityMainBinding;
-import com.gdiff.checkmate.presentation.activities.BaseActivity;
+import com.gdiff.checkmate.views.activities.BaseActivity;
 import com.google.android.material.navigation.NavigationBarView;
 
 public class MainActivity extends BaseActivity {
-    ActivityMainBinding activityMainBinding;
+    private ActivityMainBinding activityMainBinding;
+    private int currentTab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +71,18 @@ public class MainActivity extends BaseActivity {
                 return true;
             }
         });
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        currentTab = activityMainBinding.mainViewPager
+                .getCurrentItem();
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        activityMainBinding.mainViewPager
+                .setCurrentItem(currentTab);
     }
 }
 

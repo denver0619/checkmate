@@ -1,9 +1,8 @@
-package com.gdiff.checkmate.presentation.fragments.main;
+package com.gdiff.checkmate.views.fragments.main;
 
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -20,7 +19,7 @@ public class TasksSwipeCallback extends ItemTouchHelper.Callback {
     private final Activity _activity;
 
     public interface TasksSwipeActionCallback {
-        void actionCallback(TaskModel taskModel, RecyclerView.ViewHolder viewHolder);
+        void actionCallback(TaskModel<?> taskModel, RecyclerView.ViewHolder viewHolder);
     }
 
     public TasksSwipeCallback(@NonNull Activity activity, TasksSwipeActionCallback tasksSwipeActionCallback) {

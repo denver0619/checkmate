@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.presentation.activities.todotask;
+package com.gdiff.checkmate.views.activities.todotask;
 
 import android.app.Application;
 

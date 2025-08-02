@@ -9,17 +9,21 @@ import android.widget.Toast;
 
 import com.gdiff.checkmate.domain.models.ScheduledTask;
 import com.gdiff.checkmate.domain.models.TaskModel;
+import com.gdiff.checkmate.domain.models.TodoTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryListFetchResultCallback;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.domain.repositories.RepositorySingleFetchResultCallback;
 import com.gdiff.checkmate.domain.repositories.ScheduledTasksRepository;
 import com.gdiff.checkmate.infrastructure.database.TaskDbHelper;
 import com.gdiff.checkmate.infrastructure.database.tables.ScheduledTasksTable;
+import com.gdiff.checkmate.infrastructure.database.tables.TodoTasksTable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 public class ScheduledTasksRepositoryImpl implements ScheduledTasksRepository {
     private final SQLiteDatabase _database;
@@ -108,11 +112,58 @@ public class ScheduledTasksRepositoryImpl implements ScheduledTasksRepository {
 
     @Override
     public void delete(ScheduledTask scheduledTask) {
+        _executorService.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        ScheduledTasksRepositoryImpl.this._database
+                                .delete(
+                                  ScheduledTasksTable.tableName,
+                                  ScheduledTasksTable.id + " =?",
+                                  new String[]{String.valueOf(scheduledTask.getId())}
+                                );
+                        if(!_callbacks.isEmpty()) {
+                            for (RepositoryOnDataChangedCallback callback : ScheduledTasksRepositoryImpl._callbacks) {
+                                callback.onDataChanged();
+                            }
+                        }
+                    }
+                }
+        );
 
     }
 
     @Override
     public void deleteAll(List<ScheduledTask> scheduledTasks) {
+        _executorService.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (scheduledTasks == null || scheduledTasks.isEmpty()) return;
+
+                        String placeholders = String.join(",", Collections.nCopies(scheduledTasks.size(), "?"));
+
+                        ScheduledTasksRepositoryImpl.this._database.delete(ScheduledTasksTable.tableName,
+                                ScheduledTasksTable.id + " IN(" + placeholders + ")",
+                                scheduledTasks.stream()
+                                        .map(
+                                                new Function<ScheduledTask, String>() {
+                                                    @Override
+                                                    public String apply(ScheduledTask scheduledTask) {
+                                                        return String.valueOf(scheduledTask.getId());
+                                                    }
+                                                }
+                                        )
+                                        .toArray(String[]::new));
+                        if(!_callbacks.isEmpty()) {
+                            for (RepositoryOnDataChangedCallback callback : ScheduledTasksRepositoryImpl._callbacks) {
+                                callback.onDataChanged();
+                            }
+                        }
+                    }
+                }
+        );
 
     }
 

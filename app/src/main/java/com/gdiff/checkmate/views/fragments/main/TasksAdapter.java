@@ -1,7 +1,6 @@
-package com.gdiff.checkmate.presentation.fragments.main;
+package com.gdiff.checkmate.views.fragments.main;
 
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +15,7 @@ import com.gdiff.checkmate.databinding.ItemTaskListBinding;
 import com.gdiff.checkmate.domain.models.TaskModel;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 //reference material
 //https://www.digitalocean.com/community/tutorials/android-recyclerview-example
@@ -29,9 +24,9 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private OnDeleteAllItemClickListener _onDeleteAllItemClickListener;
     private OnTaskDoneClickListener _onOnTaskDoneClickListener;
     private List<TasksAdapterViewType> _viewList;
-    private List<? extends TaskModel> _unfinishedModelList;
-    private List<? extends TaskModel> _finishedModelList;
-    private List<? extends TaskModel> _expiredModelList;
+    private List<? extends TaskModel<?>> _unfinishedModelList;
+    private List<? extends TaskModel<?>> _finishedModelList;
+    private List<? extends TaskModel<?>> _expiredModelList;
 
     private final class HeaderTitles {
         private static final String UNFINISHED_TITLE = "Unfinished Tasks";
@@ -47,27 +42,27 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     public interface OnTaskItemClickListener {
-        void onTaskClick(TaskModel taskModel);
+        void onTaskClick(TaskModel<?> taskModel);
     }
 
     public interface OnDeleteAllItemClickListener {
-        void onDeleteAllClick(List<?extends TaskModel> taskModels, String taskGroupTitle);
+        void onDeleteAllClick(List<?extends TaskModel<?>> taskModels, String taskGroupTitle);
     }
 
     public interface OnTaskDoneClickListener {
-        void onTaskDone(TaskModel taskModel, boolean isDone);
+        void onTaskDone(TaskModel<?> taskModel, boolean isDone);
     }
 
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         private final ItemTaskListBinding _taskListItemBinding;
-        private TaskModel _taskModel;
+        private TaskModel<?> _taskModel;
 
         public ItemViewHolder(@NonNull View itemView, ItemTaskListBinding taskListItemBinding) {
             super(itemView);
             this._taskListItemBinding = taskListItemBinding;
         }
 
-        public void bind(TaskModel taskModel, int itemType) {
+        public void bind(TaskModel<?> taskModel, int itemType) {
             this._taskModel = taskModel;
             this._taskListItemBinding.content.setText(taskModel.content());
             this._taskListItemBinding.checkBox.setChecked(taskModel.isDone());
@@ -85,7 +80,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
 
 
-        public void bind(TaskModel taskModel, OnTaskItemClickListener listener, int itemType) {
+        public void bind(TaskModel<?> taskModel, OnTaskItemClickListener listener, int itemType) {
             this._taskModel = taskModel;
             this._taskListItemBinding.content.setText(taskModel.content());
             this._taskListItemBinding.checkBox.setChecked(taskModel.isDone());
@@ -113,26 +108,26 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             return this._taskListItemBinding;
         }
 
-        public TaskModel getTaskModel() {
+        public TaskModel<?> getTaskModel() {
             return this._taskModel;
         }
     }
 
     public class HeaderViewHolder extends RecyclerView.ViewHolder {
         private final ItemGroupHeaderBinding _groupHeaderBinding;
-        private List<? extends TaskModel> _taskModels;
+        private List<? extends TaskModel<?>> _taskModels;
 
         public HeaderViewHolder(@NonNull View itemView, ItemGroupHeaderBinding groupHeaderBinding) {
             super(itemView);
             this._groupHeaderBinding = groupHeaderBinding;
         }
 
-        public void bind(List<? extends TaskModel> taskModels, String headerTitle, int headerType) {
+        public void bind(List<? extends TaskModel<?>> taskModels, String headerTitle, int headerType) {
             this._taskModels = taskModels;
             this._groupHeaderBinding.headerTitle.setText(headerTitle);
         }
 
-        public void bind(List<? extends TaskModel> taskModels, String headerTitle, int headerType, OnDeleteAllItemClickListener listener) {
+        public void bind(List<? extends TaskModel<?>> taskModels, String headerTitle, int headerType, OnDeleteAllItemClickListener listener) {
             this._taskModels = taskModels;
             this._groupHeaderBinding.headerTitle.setText(headerTitle);
             this._groupHeaderBinding.buttonDeleteAll.setOnClickListener(
@@ -217,7 +212,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                     );
                     if (this._onOnTaskDoneClickListener != null) {
                         if (adapterPosition == RecyclerView.NO_POSITION) return;
-                        TaskModel model = _viewList.get(adapterPosition).getTaskModel();
+                        TaskModel<?> model = _viewList.get(adapterPosition).getTaskModel();
                         unfinishedItemViewHolder.getBinding().checkBox.setOnCheckedChangeListener(
                                 new CompoundButton.OnCheckedChangeListener() {
                                     @Override
@@ -246,7 +241,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                     );
                     if (this._onOnTaskDoneClickListener != null) {
                         if (adapterPosition == RecyclerView.NO_POSITION) return;
-                        TaskModel model = _viewList.get(adapterPosition).getTaskModel();
+                        TaskModel<?> model = _viewList.get(adapterPosition).getTaskModel();
                         finishedItemViewHolder.getBinding().checkBox.setOnCheckedChangeListener(
                                 new CompoundButton.OnCheckedChangeListener() {
                                     @Override
@@ -297,9 +292,9 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return _viewList.get(position).getType();
     }
 
-    public void updateModels(List<? extends TaskModel> unfinishedModels,
-                             List<? extends TaskModel> finishedModels,
-                             List<? extends TaskModel> expiredModels) {
+    public void updateModels(List<? extends TaskModel<?>> unfinishedModels,
+                             List<? extends TaskModel<?>> finishedModels,
+                             List<? extends TaskModel<?>> expiredModels) {
         this._unfinishedModelList = unfinishedModels;
         this._finishedModelList = finishedModels;
         this._expiredModelList = expiredModels;
@@ -311,7 +306,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             newViewList.add(unfinishedHeader);
         }
         if (!_unfinishedModelList.isEmpty()) {
-            for (TaskModel unfinishedModel : unfinishedModels) {
+            for (TaskModel<?> unfinishedModel : unfinishedModels) {
                 TasksAdapterViewType unfinishedItem = new TasksAdapterViewType(TasksAdapterViewType.TASK_ITEM_UNFINISHED);
                 unfinishedItem.setTaskModel(unfinishedModel);
                 newViewList.add(unfinishedItem);
@@ -322,7 +317,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             finishedHeader.setHeaderTitle(HeaderTitles.FINISHED_TITLE);
             newViewList.add(finishedHeader);
 
-            for (TaskModel finishedModel : finishedModels) {
+            for (TaskModel<?> finishedModel : finishedModels) {
                 TasksAdapterViewType finishedItem = new TasksAdapterViewType(TasksAdapterViewType.TASK_ITEM_FINISHED);
                 finishedItem.setTaskModel(finishedModel);
                 newViewList.add(finishedItem);
@@ -333,7 +328,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             expiredHeader.setHeaderTitle(HeaderTitles.EXPIRED_TITLE);
             newViewList.add(expiredHeader);
 
-            for (TaskModel expiredModel : expiredModels) {
+            for (TaskModel<?> expiredModel : expiredModels) {
                 TasksAdapterViewType expiredItem = new TasksAdapterViewType(TasksAdapterViewType.TASK_ITEM_EXPIRED);
                 expiredItem.setTaskModel(expiredModel);
                 newViewList.add(expiredItem);
@@ -348,8 +343,8 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         diffResult.dispatchUpdatesTo(this);
     }
 
-    public List<? extends TaskModel> getModels() {
-        List<TaskModel> result = new ArrayList<>();
+    public List<? extends TaskModel<?>> getModels() {
+        List<TaskModel<?>> result = new ArrayList<>();
         result.addAll(this._unfinishedModelList);
         result.addAll(this._finishedModelList);
         result.addAll(this._expiredModelList);

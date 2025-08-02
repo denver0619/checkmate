@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.presentation.fragments.main;
+package com.gdiff.checkmate.views.fragments.main;
 
 import com.gdiff.checkmate.domain.models.TaskModel;
 
@@ -12,7 +12,7 @@ public final class TasksAdapterViewType {
 
     private final int _type;
     private String _title;
-    private TaskModel _taskModel;
+    private TaskModel<?> _taskModel;
     public TasksAdapterViewType(int type) {
         this._type = type;
     }
@@ -32,7 +32,7 @@ public final class TasksAdapterViewType {
         this._taskModel = taskModel;
     }
 
-    public TaskModel getTaskModel() {
+    public TaskModel<?> getTaskModel() {
         return _taskModel;
     }
 }

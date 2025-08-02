@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.presentation.fragments.main;
+package com.gdiff.checkmate.views.fragments.main;
 
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +24,8 @@ import com.gdiff.checkmate.domain.datatransferobjects.TaskGroupListsDTO;
 import com.gdiff.checkmate.domain.models.TaskModel;
 import com.gdiff.checkmate.domain.models.TodoTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
-import com.gdiff.checkmate.presentation.activities.todotask.TodoTaskAddActivity;
-import com.gdiff.checkmate.presentation.activities.todotask.TodoTaskEditActivity;
+import com.gdiff.checkmate.views.activities.todotask.TodoTaskAddActivity;
+import com.gdiff.checkmate.views.activities.todotask.TodoTaskEditActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
@@ -52,7 +51,7 @@ public class TodoTaskFragment extends Fragment {
         tasksAdapter.setOnTaskItemClickListener(
                 new TasksAdapter.OnTaskItemClickListener() {
                     @Override
-                    public void onTaskClick(TaskModel taskModel) {
+                    public void onTaskClick(TaskModel<?> taskModel) {
                         Intent intent = new Intent(requireActivity(), TodoTaskEditActivity.class);
                         intent.putExtra(IntentExtraConstantNames.keyTaskModel, taskModel);
                         requireActivity().startActivity(intent);
@@ -63,7 +62,7 @@ public class TodoTaskFragment extends Fragment {
         tasksAdapter.setOnDeleteAllItemClickListener(
                 new TasksAdapter.OnDeleteAllItemClickListener() {
                     @Override
-                    public void onDeleteAllClick(List<? extends TaskModel> taskModels, String taskGroupTitle) {
+                    public void onDeleteAllClick(List<? extends TaskModel<?>> taskModels, String taskGroupTitle) {
 
                         new MaterialAlertDialogBuilder(requireContext())
                                 .setTitle("Delete all " + taskGroupTitle + " ?")
@@ -77,7 +76,7 @@ public class TodoTaskFragment extends Fragment {
                                 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
-                                        mViewModel.removeAllTasks(taskModels);
+                                        mViewModel.deleteAllTasks(taskModels);
                                     }
                                 })
                                 .show();
@@ -86,11 +85,10 @@ public class TodoTaskFragment extends Fragment {
                 }
         );
 
-
         tasksAdapter.setOnTaskDoneClickListener(
                 new TasksAdapter.OnTaskDoneClickListener() {
                     @Override
-                    public void onTaskDone(TaskModel taskModel, boolean isDone) {
+                    public void onTaskDone(TaskModel<?> taskModel, boolean isDone) {
                         TodoTask todoTask = (TodoTask) taskModel;
                         ((TodoTask) taskModel).setStatus(isDone);
                         mViewModel.updateTask(todoTask);
@@ -158,7 +156,7 @@ public class TodoTaskFragment extends Fragment {
         ItemTouchHelper finalItemTouchHelper = itemTouchHelper;
         itemTouchHelper = new ItemTouchHelper(new TasksSwipeCallback(requireActivity(), new TasksSwipeCallback.TasksSwipeActionCallback() {
             @Override
-            public void actionCallback(TaskModel taskModel, RecyclerView.ViewHolder viewHolder) {
+            public void actionCallback(TaskModel<?> taskModel, RecyclerView.ViewHolder viewHolder) {
                 //TODO: delete dialog then delete data
                 TodoTask todoTask = (TodoTask) taskModel;
 
@@ -169,9 +167,7 @@ public class TodoTaskFragment extends Fragment {
                                 new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
-                                        if (recyclerView.getAdapter() != null){
-//                                            recyclerView.getAdapter().notifyItemChanged(viewHolder.getAdapterPosition());
-                                        }
+
                                     }
                                 })
                         .setPositiveButton("Delete",
@@ -179,7 +175,7 @@ public class TodoTaskFragment extends Fragment {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
                                         if (recyclerView.getAdapter() != null) {
-                                            mViewModel.removeTask(
+                                            mViewModel.deleteTask(
                                                     todoTask
                                             );
                                         }

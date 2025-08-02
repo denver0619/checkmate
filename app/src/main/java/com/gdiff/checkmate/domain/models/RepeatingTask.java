@@ -1,12 +1,17 @@
 package com.gdiff.checkmate.domain.models;
 
+import android.database.Cursor;
+
+import com.gdiff.checkmate.infrastructure.database.tables.RepeatingTasksTable;
+import com.gdiff.checkmate.infrastructure.database.tables.ScheduledTasksTable;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
 
-public class RepeatingTask extends TaskModel {
+public class RepeatingTask extends TaskModel<RepeatingTask> {
     private int _id;
     private String _content;
     private Boolean _status;
@@ -136,6 +141,18 @@ public class RepeatingTask extends TaskModel {
     @Override
     public String content() {
         return  this._content;
+    }
+
+    @Override
+    public RepeatingTask fromCursor(Cursor cursor) {
+        this._id = cursor.getInt(cursor.getColumnIndexOrThrow(RepeatingTasksTable.id));
+        this._content = cursor.getString(cursor.getColumnIndexOrThrow(RepeatingTasksTable.content));
+        this._status = cursor.getInt(cursor.getColumnIndexOrThrow(RepeatingTasksTable.status)) != 0; //hack from int to boolean
+        setStartDateString(cursor.getString(cursor.getColumnIndexOrThrow(RepeatingTasksTable.startDate)));
+        this._interval = cursor.getInt(cursor.getColumnIndexOrThrow(RepeatingTasksTable.interval));
+        setLastCompletedString(cursor.getString(cursor.getColumnIndexOrThrow(RepeatingTasksTable.lastCompleted)));
+        setCurrentCompletedString(cursor.getString(cursor.getColumnIndexOrThrow(RepeatingTasksTable.currentCompleted)));
+        return this;
     }
 
     @Override

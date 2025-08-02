@@ -1,10 +1,9 @@
-package com.gdiff.checkmate.presentation.activities.todotask;
+package com.gdiff.checkmate.views.activities.todotask;
 
 import android.os.Bundle;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -16,8 +15,7 @@ import com.gdiff.checkmate.databinding.ActivityTodoTaskEditBinding;
 import com.gdiff.checkmate.domain.models.TaskModel;
 import com.gdiff.checkmate.domain.models.TodoTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
-import com.gdiff.checkmate.presentation.activities.BaseActivity;
-import com.gdiff.checkmate.presentation.activities.BaseTaskActivity;
+import com.gdiff.checkmate.views.activities.BaseTaskActivity;
 
 public class TodoTaskEditActivity extends BaseTaskActivity {
     private TodoTaskEditViewModel viewModel;
@@ -30,8 +28,6 @@ public class TodoTaskEditActivity extends BaseTaskActivity {
         EdgeToEdge.enable(this);
         todoTaskEditBinding = ActivityTodoTaskEditBinding.inflate(getLayoutInflater());
         setContentView(todoTaskEditBinding.getRoot());
-
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
