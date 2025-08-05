@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+import com.gdiff.checkmate.views.fragments.main.RepeatingTaskFragment;
 import com.gdiff.checkmate.views.fragments.main.ScheduledTaskFragment;
 import com.gdiff.checkmate.views.fragments.main.TodoTaskFragment;
 
@@ -31,7 +32,7 @@ public class MainActivityViewPagerAdapter extends FragmentStateAdapter {
                 break;
             case 2:
                 //placeHolder
-                result = new TodoTaskFragment();
+                result = new RepeatingTaskFragment();
                 break;
             default:
                 //TODO: handle exception

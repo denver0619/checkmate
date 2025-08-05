@@ -135,7 +135,7 @@ public class RepeatingTask extends TaskModel<RepeatingTask> {
     @Override
     public Boolean isExpired() {
         //Todo: date checks
-        return null;
+        return false;
     }
 
     @Override

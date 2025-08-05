@@ -13,6 +13,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Custom.Checkmate">
         <activity
+            android:name=".views.activities.repeatingtask.RepeatingTaskEditActivity"
+            android:exported="false" />
+        <activity
+            android:name=".views.activities.repeatingtask.RepeatingTaskAddActivity"
+            android:exported="false" />
+        <activity
             android:name=".views.activities.scheduledtask.ScheduledTaskEditActivity"
             android:exported="false" />
         <activity

@@ -44,7 +44,7 @@ public class ScheduledTaskFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        fragmentScheduledTaskBinding = FragmentScheduledTaskBinding.inflate(getLayoutInflater(), container, false);
+        fragmentScheduledTaskBinding = FragmentScheduledTaskBinding.inflate(inflater, container, false);
         return fragmentScheduledTaskBinding.getRoot();
     }
 

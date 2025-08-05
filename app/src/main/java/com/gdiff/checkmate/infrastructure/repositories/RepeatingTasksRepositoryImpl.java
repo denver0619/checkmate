@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.gdiff.checkmate.domain.models.RepeatingTask;
@@ -39,7 +40,7 @@ public class RepeatingTasksRepositoryImpl implements RepeatingTasksRepository {
     }
 
     public static RepeatingTasksRepositoryImpl getInstance(Application _context) {
-        if (_instance != null) {
+        if (_instance == null) {
             synchronized (RepeatingTasksRepositoryImpl.class) {
                 _instance = new RepeatingTasksRepositoryImpl(_context);
             }
@@ -81,6 +82,14 @@ public class RepeatingTasksRepositoryImpl implements RepeatingTasksRepository {
 
     @Override
     public void update(RepeatingTask repeatingTask) {
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
+        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
         _executorService.submit(
                 new Runnable() {
                     @Override
@@ -195,7 +204,7 @@ public class RepeatingTasksRepositoryImpl implements RepeatingTasksRepository {
 
                         if (cursor != null) {
                             try {
-                                for (cursor.moveToFirst(); cursor.isAfterLast(); cursor.moveToNext()) {
+                                for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                                     results.add(
                                             new RepeatingTask().fromCursor(cursor)
                                     );

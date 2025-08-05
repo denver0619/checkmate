@@ -90,7 +90,7 @@ public class TodoTaskFragment extends Fragment {
                     @Override
                     public void onTaskDone(TaskModel<?> taskModel, boolean isDone) {
                         TodoTask todoTask = (TodoTask) taskModel;
-                        ((TodoTask) taskModel).setStatus(isDone);
+                        todoTask.setStatus(isDone);
                         mViewModel.updateTask(todoTask);
                     }
                 }

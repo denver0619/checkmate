@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.views.activities.scheduledtask;
+package com.gdiff.checkmate.views.activities.repeatingtask;
 
 import android.app.Application;
 
@@ -7,21 +7,20 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.gdiff.checkmate.domain.models.ScheduledTask;
+import com.gdiff.checkmate.domain.models.RepeatingTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
-import com.gdiff.checkmate.infrastructure.repositories.ScheduledTasksRepositoryImpl;
+import com.gdiff.checkmate.infrastructure.repositories.RepeatingTasksRepositoryImpl;
 
 import java.util.Date;
 
-public class ScheduledTaskAddViewModel extends AndroidViewModel {
-
-    private final Application _applicaContext;
+public class RepeatingTaskAddViewModel extends AndroidViewModel {
+    private final Application _context;
     private RepositoryOnDataChangedCallback _onDataChangedCallback;
     private final MutableLiveData<Date> _selectedDate = new MutableLiveData<>();
 
-    public ScheduledTaskAddViewModel(@NonNull Application application) {
+    public RepeatingTaskAddViewModel(@NonNull Application application) {
         super(application);
-        this._applicaContext = application;
+        this._context = application;
     }
 
     public LiveData<Date> getSelectedDate() {
@@ -32,21 +31,19 @@ public class ScheduledTaskAddViewModel extends AndroidViewModel {
         this._selectedDate.setValue(selectedDate);
     }
 
-    public void addTask(ScheduledTask scheduledTask, RepositoryOnDataChangedCallback onDataChangedCallback) {
+    public void addTask(RepeatingTask repeatingTask, RepositoryOnDataChangedCallback onDataChangedCallback) {
         this._onDataChangedCallback = onDataChangedCallback;
-        ScheduledTasksRepositoryImpl.getInstance(this._applicaContext)
-                        .registerCallback(onDataChangedCallback);
-        ScheduledTasksRepositoryImpl.getInstance(this._applicaContext)
-                .add(scheduledTask);
+        RepeatingTasksRepositoryImpl.getInstance(this._context)
+                .registerCallback(onDataChangedCallback);
+        RepeatingTasksRepositoryImpl.getInstance(this._context)
+                .add(repeatingTask);
     }
 
     @Override
     public void onCleared() {
         if (this._onDataChangedCallback != null) {
-            ScheduledTasksRepositoryImpl.getInstance(this._applicaContext)
+            RepeatingTasksRepositoryImpl.getInstance(this._context)
                     .unregisterCallback(this._onDataChangedCallback);
         }
     }
-
-
 }

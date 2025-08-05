@@ -1,4 +1,4 @@
-package com.gdiff.checkmate.views.activities.scheduledtask;
+package com.gdiff.checkmate.views.activities.repeatingtask;
 
 import android.os.Bundle;
 import android.view.View;
@@ -12,9 +12,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.gdiff.checkmate.R;
-import com.gdiff.checkmate.application.constants.IntentExtraConstantNames;
-import com.gdiff.checkmate.databinding.ActivityScheduledTaskEditBinding;
-import com.gdiff.checkmate.domain.models.ScheduledTask;
+import com.gdiff.checkmate.databinding.ActivityRepeatingTaskAddBinding;
+import com.gdiff.checkmate.domain.models.RepeatingTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.views.activities.BaseTaskActivity;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -27,16 +26,16 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class ScheduledTaskEditActivity extends BaseTaskActivity {
-    ActivityScheduledTaskEditBinding scheduledTaskEditBinding;
-    ScheduledTaskEditViewModel mViewModel;
+public class RepeatingTaskAddActivity extends BaseTaskActivity {
+    private ActivityRepeatingTaskAddBinding repeatingTaskAddBinding;
+    private RepeatingTaskAddViewModel mViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        scheduledTaskEditBinding = ActivityScheduledTaskEditBinding.inflate(getLayoutInflater());
-        setContentView(scheduledTaskEditBinding.getRoot());
+        repeatingTaskAddBinding = ActivityRepeatingTaskAddBinding.inflate(getLayoutInflater());
+        setContentView(repeatingTaskAddBinding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -47,25 +46,10 @@ public class ScheduledTaskEditActivity extends BaseTaskActivity {
     @Override
     public void onStart() {
         super.onStart();
-        mViewModel = new ViewModelProvider(this).get(ScheduledTaskEditViewModel.class);
-        setSupportActionBar(scheduledTaskEditBinding.todoTaskToolbar);
+        mViewModel = new ViewModelProvider(this).get(RepeatingTaskAddViewModel.class);
+        setSupportActionBar(repeatingTaskAddBinding.todoTaskToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-
-        ScheduledTask scheduledTask = (ScheduledTask) getIntent().getSerializableExtra(IntentExtraConstantNames.keyTaskModel);
-
-        if (scheduledTask != null) {
-            this.scheduledTaskEditBinding.taskContent.setText(scheduledTask.getContent());
-            this.scheduledTaskEditBinding.dueDate.setText(
-                    new SimpleDateFormat(
-                            "MM-dd-yyyy",
-                            Locale.getDefault()
-                    ).format(
-                            scheduledTask.getDueDate()
-                    )
-            );
-            mViewModel.setSelectedDate(scheduledTask.getDueDate());
         }
 
         mViewModel.getSelectedDate().observe(
@@ -73,7 +57,7 @@ public class ScheduledTaskEditActivity extends BaseTaskActivity {
                 new Observer<Date>() {
                     @Override
                     public void onChanged(Date date) {
-                        scheduledTaskEditBinding.dueDate.setText(
+                        repeatingTaskAddBinding.startDate.setText(
                                 new SimpleDateFormat(
                                         "MM-dd-yyyy",
                                         Locale.getDefault()
@@ -85,7 +69,7 @@ public class ScheduledTaskEditActivity extends BaseTaskActivity {
                 }
         );
 
-        scheduledTaskEditBinding.dueDate.setOnClickListener(
+        repeatingTaskAddBinding.startDate.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -98,7 +82,7 @@ public class ScheduledTaskEditActivity extends BaseTaskActivity {
 //                                .setCalendarConstraints(
 //                                        calendarConstraints
 //                                )
-                                .setTitleText("Due Date")
+                                .setTitleText("Start Date")
                                 .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                                 .build();
                         materialDatePicker.addOnPositiveButtonClickListener(
@@ -114,27 +98,28 @@ public class ScheduledTaskEditActivity extends BaseTaskActivity {
                 }
         );
 
-        scheduledTaskEditBinding.saveButton.setOnClickListener(
-            new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (mViewModel.getSelectedDate().getValue()!= null) {
-                        if (scheduledTask != null) {
-                            scheduledTask.setContent((scheduledTaskEditBinding.taskContent.getText()!= null)?scheduledTaskEditBinding.taskContent.getText().toString():"");
-                            scheduledTask.setDueDate(mViewModel.getSelectedDate().getValue());
-                            mViewModel.updateTask(
-                                scheduledTask,
-                                new RepositoryOnDataChangedCallback() {
-                                    @Override
-                                    public void onDataChanged() {
-                                        finish();
-                                    }
-                                }
-                            );
+        repeatingTaskAddBinding.saveButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (mViewModel.getSelectedDate().getValue() != null) {
+                            RepeatingTask repeatingTask = new RepeatingTask();
+                            repeatingTask.setContent((repeatingTaskAddBinding.taskContent.getText()!=null)?repeatingTaskAddBinding.taskContent.getText().toString():"");
+                            repeatingTask.setInterval((repeatingTaskAddBinding.interval.getText()!=null)?Integer.parseInt(repeatingTaskAddBinding.interval.getText().toString()):1);
+                            repeatingTask.setStartDate(mViewModel.getSelectedDate().getValue());
+                            repeatingTask.setLastCompleted(mViewModel.getSelectedDate().getValue());
+                            repeatingTask.setCurrentCompleted(mViewModel.getSelectedDate().getValue());
+
+                            mViewModel.addTask(repeatingTask,
+                                    new RepositoryOnDataChangedCallback() {
+                                        @Override
+                                        public void onDataChanged() {
+                                            finish();
+                                        }
+                                    });
                         }
                     }
                 }
-            }
         );
     }
 }
