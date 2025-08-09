@@ -1,6 +1,9 @@
 package com.gdiff.checkmate.views.activities.repeatingtask;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 
@@ -18,6 +21,8 @@ import com.gdiff.checkmate.databinding.ActivityRepeatingTaskEditBinding;
 import com.gdiff.checkmate.domain.models.RepeatingTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.views.activities.BaseTaskActivity;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 
@@ -31,6 +36,11 @@ import java.util.TimeZone;
 public class RepeatingTaskEditActivity extends BaseTaskActivity {
     private ActivityRepeatingTaskEditBinding repeatingTaskEditBinding;
     private RepeatingTaskEditViewModel mViewModel;
+    private boolean contentCheckPassed = true;
+    private boolean startDateCheckPassed = true;
+    private boolean intervalCheckPassed = true;
+    private boolean intervalValidityCheckPassed = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,14 +107,14 @@ public class RepeatingTaskEditActivity extends BaseTaskActivity {
                     @Override
                     public void onClick(View view) {
                         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.systemDefault()));
-//                        CalendarConstraints calendarConstraints = new CalendarConstraints.Builder()
-//                                .setValidator(DateValidatorPointForward.now())
-//                                .build();
+                        CalendarConstraints calendarConstraints = new CalendarConstraints.Builder()
+                                .setValidator(DateValidatorPointForward.now())
+                                .build();
 
                         MaterialDatePicker<Long> materialDatePicker = MaterialDatePicker.Builder.datePicker()
-//                                .setCalendarConstraints(
-//                                        calendarConstraints
-//                                )
+                                .setCalendarConstraints(
+                                        calendarConstraints
+                                )
                                 .setTitleText("Start Date")
                                 .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                                 .build();
@@ -125,41 +135,149 @@ public class RepeatingTaskEditActivity extends BaseTaskActivity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Log.d("ONCLICK", "Updating task ID: " + repeatingTask.getId());
-                        Log.d("ONCLICK", "Updating task ID: " + repeatingTask.getId());
-                        Log.d("ONCLICK", "Updating task ID: " + repeatingTask.getId());
-                        Log.d("ONCLICK", "Updating task ID: " + repeatingTask.getId());
-                        Log.d("ONCLICK", "Updating task ID: " + repeatingTask.getId());
+                        contentCheckPassed = isTextFieldEmpty(
+                                repeatingTaskEditBinding.taskContent,
+                                repeatingTaskEditBinding.taskContentInputLayout,
+                                "Content cannot be empty",
+                                R.drawable.ic_warning
+                        );
+                        startDateCheckPassed = isTextFieldEmpty(
+                                repeatingTaskEditBinding.startDate,
+                                repeatingTaskEditBinding.startDateInputLayout,
+                                "Please select date",
+                                R.drawable.ic_warning
+                        );
+                        intervalCheckPassed = isTextFieldEmpty(
+                                repeatingTaskEditBinding.interval,
+                                repeatingTaskEditBinding.intervalInputLayout,
+                                "Interval cannot be empty",
+                                R.drawable.ic_warning
+                        );
+                        intervalValidityCheckPassed = isIntervalValid(
+                                repeatingTaskEditBinding.interval,
+                                repeatingTaskEditBinding.intervalInputLayout,
+                                "Interval cannot be less than 1",
+                                R.drawable.ic_warning,
+                                CustomComparator.LESS_THAN,
+                                1
+                        );
                         if (mViewModel.getSelectedDate().getValue()!= null) {
-                            Log.d("ONCLICK-SELECTED-DATE", "Updating task ID: " + repeatingTask.getId());
-                            Log.d("ONCLICK-SELECTED-DATE", "Updating task ID: " + repeatingTask.getId());
-                            Log.d("ONCLICK-SELECTED-DATE", "Updating task ID: " + repeatingTask.getId());
-                            Log.d("ONCLICK-SELECTED-DATE", "Updating task ID: " + repeatingTask.getId());
-                            Log.d("ONCLICK-SELECTED-DATE", "Updating task ID: " + repeatingTask.getId());
-                            Log.d("ONCLICK-SELECTED-DATE", "Updating task ID: " + repeatingTask.getId());
                             if (repeatingTask != null) {
-                                Log.d("ONCLICK-REPEATINGTASK", "Updating task ID: " + repeatingTask.getId());
-                                Log.d("ONCLICK-REPEATINGTASK", "Updating task ID: " + repeatingTask.getId());
-                                Log.d("ONCLICK-REPEATINGTASK", "Updating task ID: " + repeatingTask.getId());
-                                Log.d("ONCLICK-REPEATINGTASK", "Updating task ID: " + repeatingTask.getId());
-                                Log.d("ONCLICK-REPEATINGTASK", "Updating task ID: " + repeatingTask.getId());
                                 repeatingTask.setContent((repeatingTaskEditBinding.taskContent.getText()!=null)?repeatingTaskEditBinding.taskContent.getText().toString():"");
                                 repeatingTask.setInterval((repeatingTaskEditBinding.interval.getText()!=null)?Integer.parseInt(repeatingTaskEditBinding.interval.getText().toString()):1);
                                 repeatingTask.setStartDate(mViewModel.getSelectedDate().getValue());
                                 repeatingTask.setLastCompleted(mViewModel.getSelectedDate().getValue());
                                 repeatingTask.setCurrentCompleted(mViewModel.getSelectedDate().getValue());
-                                mViewModel.updateTask(
-                                        repeatingTask,
-                                        new RepositoryOnDataChangedCallback() {
-                                            @Override
-                                            public void onDataChanged() {
-                                                finish();
+
+
+                                if (contentCheckPassed&&startDateCheckPassed&&intervalCheckPassed&&intervalValidityCheckPassed) {
+                                    mViewModel.updateTask(
+                                            repeatingTask,
+                                            new RepositoryOnDataChangedCallback() {
+                                                @Override
+                                                public void onDataChanged() {
+                                                    finish();
+                                                }
                                             }
-                                        }
-                                );
+                                    );
+                                } else {
+                                    new Handler().postDelayed(
+                                            new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    repeatingTaskEditBinding.saveButton.setEnabled(true);
+                                                }
+                                            },
+                                            300
+                                    );
+                                }
                             }
                         }
                     }
                 });
+
+        //ui input checks
+        repeatingTaskEditBinding.taskContent
+                .addTextChangedListener(
+                        new TextWatcher() {
+                            @Override
+                            public void afterTextChanged(Editable editable) {
+
+                            }
+
+                            @Override
+                            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                                contentCheckPassed = isTextFieldEmpty(
+                                        repeatingTaskEditBinding.taskContent,
+                                        repeatingTaskEditBinding.taskContentInputLayout,
+                                        "Content cannot be empty",
+                                        R.drawable.ic_warning
+                                );
+                            }
+                        }
+                );
+
+        repeatingTaskEditBinding.startDate
+                .addTextChangedListener(
+                        new TextWatcher() {
+                            @Override
+                            public void afterTextChanged(Editable editable) {
+
+                            }
+
+                            @Override
+                            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                                startDateCheckPassed = isTextFieldEmpty(
+                                        repeatingTaskEditBinding.startDate,
+                                        repeatingTaskEditBinding.startDateInputLayout,
+                                        "Please select date",
+                                        R.drawable.ic_warning
+                                );
+                            }
+                        }
+                );
+
+        repeatingTaskEditBinding.interval
+                .addTextChangedListener(
+                        new TextWatcher() {
+                            @Override
+                            public void afterTextChanged(Editable editable) {
+
+                            }
+
+                            @Override
+                            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                                intervalCheckPassed = isTextFieldEmpty(
+                                        repeatingTaskEditBinding.interval,
+                                        repeatingTaskEditBinding.intervalInputLayout,
+                                        "Interval cannot be empty",
+                                        R.drawable.ic_warning
+                                );
+                                intervalValidityCheckPassed = isIntervalValid(
+                                        repeatingTaskEditBinding.interval,
+                                        repeatingTaskEditBinding.intervalInputLayout,
+                                        "Interval cannot be less than 1",
+                                        R.drawable.ic_warning,
+                                        CustomComparator.LESS_THAN,
+                                        1
+                                );
+                            }
+                        }
+                );
     }
 }

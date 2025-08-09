@@ -5,6 +5,7 @@ import android.database.Cursor;
 import com.gdiff.checkmate.infrastructure.database.tables.RepeatingTasksTable;
 import com.gdiff.checkmate.infrastructure.database.tables.ScheduledTasksTable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -49,6 +50,17 @@ public class RepeatingTask extends TaskModel<RepeatingTask> {
     }
 
     public void setStatus(Boolean status) {
+        if (status) {
+            LocalDate today = LocalDate.now();
+            LocalDate current = _currentCompleted.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            if (!today.isEqual(current)) {
+                setCurrentCompleted(
+                        Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant())
+                );
+            }
+        }
         this._status = status;
     }
 
@@ -164,14 +176,26 @@ public class RepeatingTask extends TaskModel<RepeatingTask> {
         return this._id == otherRepeatingTask._id
                 && Objects.equals(this._content, otherRepeatingTask._content)
                 && this._status == otherRepeatingTask._status
-                && this._startDate == otherRepeatingTask._startDate
+                && isSameDate(this._startDate, otherRepeatingTask._startDate)
                 && this._interval == otherRepeatingTask._interval
-                && this._lastCompleted == otherRepeatingTask._lastCompleted
-                && this._currentCompleted == otherRepeatingTask._currentCompleted;
+                && isSameDate(this._lastCompleted, otherRepeatingTask._lastCompleted)
+                && isSameDate(this._currentCompleted, otherRepeatingTask._currentCompleted);
+    }
+
+    private boolean isSameDate(Date d1, Date d2) {
+        if (d1 == null && d2 == null) return true;
+        if (d1 == null || d2 == null) return false;
+        LocalDate ld1 = d1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate ld2 = d2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return ld1.isEqual(ld2);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_id, _content, _status, _startDate, _interval, _lastCompleted, _currentCompleted);
+        return Objects.hash(_id, _content, _status, toLocalDate(_startDate), _interval, toLocalDate(_lastCompleted), toLocalDate(_currentCompleted));
+    }
+
+    private LocalDate toLocalDate(Date date) {
+        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

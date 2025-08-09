@@ -114,13 +114,23 @@ public class ScheduledTask extends TaskModel<ScheduledTask>{
         return this._id == otherScheduledTask._id
                 && Objects.equals(this._content, otherScheduledTask._content)
                 && this._status == otherScheduledTask._status
-                && this._dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().isEqual(
-                        otherScheduledTask.getDueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-        );
+                && isSameDate(this._dueDate, otherScheduledTask._dueDate);
+    }
+
+    private boolean isSameDate(Date d1, Date d2) {
+        if (d1 == null && d2 == null) return true;
+        if (d1 == null || d2 == null) return false;
+        LocalDate ld1 = d1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate ld2 = d2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return ld1.isEqual(ld2);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_id, _content, _status, _dueDate);
+        return Objects.hash(_id, _content, _status, toLocalDate(_dueDate));
+    }
+
+    private LocalDate toLocalDate(Date date) {
+        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

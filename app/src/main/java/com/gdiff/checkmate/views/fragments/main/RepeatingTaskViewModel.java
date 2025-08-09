@@ -7,13 +7,16 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import androidx.work.ListenableWorker;
 
 import com.gdiff.checkmate.domain.datatransferobjects.TaskGroupListsDTO;
 import com.gdiff.checkmate.domain.models.RepeatingTask;
 import com.gdiff.checkmate.domain.models.TaskModel;
 import com.gdiff.checkmate.domain.repositories.BaseRepository;
+import com.gdiff.checkmate.domain.repositories.RepeatingTasksRepository;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.domain.usecases.FetchTasksUseCase;
+import com.gdiff.checkmate.domain.usecases.UpdateRepeatingTasksUseCase;
 import com.gdiff.checkmate.infrastructure.repositories.RepeatingTasksRepositoryImpl;
 
 import java.util.ArrayList;
@@ -34,6 +37,13 @@ public class RepeatingTaskViewModel extends AndroidViewModel {
     public LiveData<TaskGroupListsDTO> getTaskGroupList() {return this._taskGroupList;}
 
     public void loadData(RepositoryOnDataChangedCallback onDataChangedCallback) {
+        //update the tasks
+        RepeatingTasksRepository repeatingTasksRepository = (RepeatingTasksRepository) RepeatingTasksRepositoryImpl.getInstance(this._context);
+        UpdateRepeatingTasksUseCase updateRepeatingTasksUseCase = new UpdateRepeatingTasksUseCase(
+                repeatingTasksRepository);
+        updateRepeatingTasksUseCase.updateTasksStatus(null);
+
+        //initiallize repo
         this._onDataChangedCallback = onDataChangedCallback;
         BaseRepository baseRepository = RepeatingTasksRepositoryImpl.getInstance(this._context);
         this._feFetchTasksUseCase = new FetchTasksUseCase(baseRepository);

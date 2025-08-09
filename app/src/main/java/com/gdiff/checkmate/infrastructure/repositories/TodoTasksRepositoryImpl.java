@@ -20,6 +20,7 @@ import com.gdiff.checkmate.infrastructure.database.tables.TodoTasksTable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -29,13 +30,13 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
     private final SQLiteDatabase _database;
     private final Context _context;
     private static ExecutorService _executorService;
-    private static List<RepositoryOnDataChangedCallback> _callbacks;
+    private static CopyOnWriteArrayList<RepositoryOnDataChangedCallback> _callbacks;
     private static volatile TodoTasksRepositoryImpl _instance;
 
     private TodoTasksRepositoryImpl(Application applicationContext) {
         this._context = applicationContext;
         this._database = TaskDbHelper.getInstance(applicationContext).getWritableDatabase();
-        _callbacks = new ArrayList<>();
+        _callbacks = new CopyOnWriteArrayList<>();
         _executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -177,6 +178,11 @@ public final class TodoTasksRepositoryImpl implements TodoTasksRepository {
                     }
                 }
         );
+    }
+
+    @Override
+    public void updateAll(List<TodoTask> Tasks) {
+        //todo:=======================
     }
 
     @Override

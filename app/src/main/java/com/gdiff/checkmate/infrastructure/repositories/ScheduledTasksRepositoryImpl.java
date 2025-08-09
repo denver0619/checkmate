@@ -21,6 +21,7 @@ import com.gdiff.checkmate.infrastructure.database.tables.TodoTasksTable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -29,13 +30,13 @@ public class ScheduledTasksRepositoryImpl implements ScheduledTasksRepository {
     private final SQLiteDatabase _database;
     private final Application _context;
     private static ExecutorService _executorService;
-    private static List<RepositoryOnDataChangedCallback> _callbacks;
+    private static CopyOnWriteArrayList<RepositoryOnDataChangedCallback> _callbacks;
     private static volatile ScheduledTasksRepositoryImpl _instance;
 
     private ScheduledTasksRepositoryImpl(Application context) {
         this._context = context;
         this._database = TaskDbHelper.getInstance(context).getWritableDatabase();
-        _callbacks = new ArrayList<>();
+        _callbacks = new CopyOnWriteArrayList<>();
         _executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -108,6 +109,11 @@ public class ScheduledTasksRepositoryImpl implements ScheduledTasksRepository {
                 }
         );
 
+    }
+
+    @Override
+    public void updateAll(List<ScheduledTask> Tasks) {
+        //TODO:=======================
     }
 
     @Override

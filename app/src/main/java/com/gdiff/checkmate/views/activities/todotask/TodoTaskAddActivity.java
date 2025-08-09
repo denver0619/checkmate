@@ -1,10 +1,14 @@
 package com.gdiff.checkmate.views.activities.todotask;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -16,13 +20,15 @@ import com.gdiff.checkmate.databinding.ActivityTodoTaskAddBinding;
 import com.gdiff.checkmate.domain.models.TodoTask;
 import com.gdiff.checkmate.domain.repositories.RepositoryOnDataChangedCallback;
 import com.gdiff.checkmate.views.activities.BaseTaskActivity;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Date;
 
 public class TodoTaskAddActivity extends BaseTaskActivity {
-    ActivityTodoTaskAddBinding activityTodoTaskAddBinding;
-    TodoTaskAddViewModel viewModel;
-
+    private ActivityTodoTaskAddBinding activityTodoTaskAddBinding;
+    private TodoTaskAddViewModel viewModel;
+    private boolean contentCheckPassed = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,13 +56,28 @@ public class TodoTaskAddActivity extends BaseTaskActivity {
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                contentCheckPassed = isTextFieldEmpty(
+                                        activityTodoTaskAddBinding.taskContent,
+                                        activityTodoTaskAddBinding.taskContentInputLayout,
+                                        "Content cannot be empty",
+                                        R.drawable.ic_warning
+                                );
+
                                 activityTodoTaskAddBinding.saveButton.setEnabled(false);
                                 TodoTask todoTask = new TodoTask();
-                                boolean checksPassed = true;
-                                // TODO: Data Checks
-                                todoTask.setContent(activityTodoTaskAddBinding.todoTaskContent.getText().toString());
+                                todoTask.setContent((activityTodoTaskAddBinding
+                                        .taskContent
+                                        .getText()!=null)
+                                        ?activityTodoTaskAddBinding
+                                        .taskContent
+                                        .getText()
+                                        .toString()
+                                        :"");
 
-                                if (checksPassed) {
+
+
+                                // TODO: Data Checks
+                                if (contentCheckPassed) {
                                     viewModel.addTodoTask(todoTask, new RepositoryOnDataChangedCallback() {
                                         @Override
                                         public void onDataChanged() {
@@ -77,5 +98,33 @@ public class TodoTaskAddActivity extends BaseTaskActivity {
                             }
                         }
                 );
+
+
+        //ui input checks
+        activityTodoTaskAddBinding.taskContent
+                .addTextChangedListener(
+                        new TextWatcher() {
+                            @Override
+                            public void afterTextChanged(Editable editable) {
+
+                            }
+
+                            @Override
+                            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                                contentCheckPassed = isTextFieldEmpty(
+                                        activityTodoTaskAddBinding.taskContent,
+                                        activityTodoTaskAddBinding.taskContentInputLayout,
+                                        "Content cannot be empty",
+                                        R.drawable.ic_warning
+                                );
+                            }
+                        }
+                );
+
     }
 }

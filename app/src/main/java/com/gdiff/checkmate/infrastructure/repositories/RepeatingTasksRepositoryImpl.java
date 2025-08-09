@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteException;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+
 import com.gdiff.checkmate.domain.models.RepeatingTask;
 import com.gdiff.checkmate.domain.models.ScheduledTask;
 import com.gdiff.checkmate.domain.repositories.RepeatingTasksRepository;
@@ -21,6 +23,7 @@ import com.gdiff.checkmate.infrastructure.database.tables.ScheduledTasksTable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -29,13 +32,13 @@ public class RepeatingTasksRepositoryImpl implements RepeatingTasksRepository {
     private final SQLiteDatabase _database;
     private final Application _context;
     private static ExecutorService _executorService;
-    private static List<RepositoryOnDataChangedCallback> _callbacks;
+    private static CopyOnWriteArrayList<RepositoryOnDataChangedCallback> _callbacks;
     private static volatile RepeatingTasksRepositoryImpl _instance;
 
     private RepeatingTasksRepositoryImpl(Application context) {
         this._context = context;
         this._database = TaskDbHelper.getInstance(context).getWritableDatabase();
-        _callbacks = new ArrayList<>();
+        _callbacks = new CopyOnWriteArrayList<>();
         _executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -82,14 +85,6 @@ public class RepeatingTasksRepositoryImpl implements RepeatingTasksRepository {
 
     @Override
     public void update(RepeatingTask repeatingTask) {
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
-        Log.d("DEBUG", "Updating task ID: " + repeatingTask.getId());
         _executorService.submit(
                 new Runnable() {
                     @Override
@@ -118,6 +113,84 @@ public class RepeatingTasksRepositoryImpl implements RepeatingTasksRepository {
                             }
                             Toast.makeText(RepeatingTasksRepositoryImpl.this._context, "Success", Toast.LENGTH_SHORT).show();
                         }
+                    }
+                }
+        );
+    }
+
+    @Override
+    public void updateAll(List<RepeatingTask> tasks) {
+        _executorService.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        for (RepeatingTask task : tasks) {
+                            this.update(task);
+                        }
+                        if(!_callbacks.isEmpty()) {
+                            for (RepositoryOnDataChangedCallback callback : RepeatingTasksRepositoryImpl._callbacks) {
+                                callback.onDataChanged();
+                            }
+                        }
+                    }
+                    private void update(RepeatingTask repeatingTask) {
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(RepeatingTasksTable.content, repeatingTask.getContent());
+                        contentValues.put(RepeatingTasksTable.status, repeatingTask.getStatus());
+                        contentValues.put(RepeatingTasksTable.startDate, repeatingTask.getStartDateString());
+                        contentValues.put(RepeatingTasksTable.interval, repeatingTask.getInterval());
+                        contentValues.put(RepeatingTasksTable.lastCompleted, repeatingTask.getLastCompletedString());
+                        contentValues.put(RepeatingTasksTable.currentCompleted, repeatingTask.getCurrentCompletedString());
+
+                        long result = RepeatingTasksRepositoryImpl.this._database.
+                                update(RepeatingTasksTable.tableName,
+                                        contentValues,
+                                        RepeatingTasksTable.id + " =?",
+                                        new String[]{String.valueOf(repeatingTask.getId())});
+
+                        if (result == -1) {
+                            Toast.makeText(RepeatingTasksRepositoryImpl.this._context, "Failed", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(RepeatingTasksRepositoryImpl.this._context, "Success", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+        );
+    }
+
+    @Override
+    public void updateAll(List<RepeatingTask> tasks, @Nullable Runnable onFinished) {
+        _executorService.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        for (RepeatingTask task : tasks) {
+                            this.update(task);
+                        }
+                        if (onFinished != null) {
+                            onFinished.run();
+                        }
+                    }
+                    private void update(RepeatingTask repeatingTask) {
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(RepeatingTasksTable.content, repeatingTask.getContent());
+                        contentValues.put(RepeatingTasksTable.status, repeatingTask.getStatus());
+                        contentValues.put(RepeatingTasksTable.startDate, repeatingTask.getStartDateString());
+                        contentValues.put(RepeatingTasksTable.interval, repeatingTask.getInterval());
+                        contentValues.put(RepeatingTasksTable.lastCompleted, repeatingTask.getLastCompletedString());
+                        contentValues.put(RepeatingTasksTable.currentCompleted, repeatingTask.getCurrentCompletedString());
+
+                        long result = RepeatingTasksRepositoryImpl.this._database.
+                                update(RepeatingTasksTable.tableName,
+                                        contentValues,
+                                        RepeatingTasksTable.id + " =?",
+                                        new String[]{String.valueOf(repeatingTask.getId())});
+
+//                        if (result == -1) {
+//                            Toast.makeText(RepeatingTasksRepositoryImpl.this._context, "Failed", Toast.LENGTH_SHORT).show();
+//                        } else {
+//                            Toast.makeText(RepeatingTasksRepositoryImpl.this._context, "Success", Toast.LENGTH_SHORT).show();
+//                        }
                     }
                 }
         );

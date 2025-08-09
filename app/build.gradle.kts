@@ -48,4 +48,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.work.testing)
+    androidTestImplementation (libs.truth)
+    androidTestImplementation (libs.androidx.work.testing.v290)
+    implementation (libs.work.runtime.ktx)
+    implementation(libs.guava)
 }
